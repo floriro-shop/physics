@@ -116,6 +116,19 @@ section{scroll-margin-top:16px}
 .tab:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
 .sim[hidden]{display:none}
 .nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;display:flex;gap:4px;overflow-x:auto;padding:8px 12px;background:var(--card);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);justify-content:safe center}
+
+.bgr,.nlo,.nlh{display:none}.nl{display:contents}
+@media(max-width:720px){
+.nav{justify-content:flex-start;overflow:visible;padding:6px 12px;backdrop-filter:none;-webkit-backdrop-filter:none;background:var(--bg2)}
+.bgr{display:flex;flex-direction:column;justify-content:center;gap:5px;width:42px;height:38px;padding:0 9px;border:1px solid var(--line);border-radius:10px;background:transparent;cursor:pointer}
+.bgr span{display:block;height:2.5px;border-radius:2px;background:var(--ink)}
+.nl{display:flex;flex-direction:column;gap:4px;position:fixed;top:0;bottom:0;right:0;width:min(78vw,300px);z-index:41;padding:18px 14px;padding-top:calc(18px + env(safe-area-inset-top,0px));background:var(--bg2);border-left:1px solid var(--line);box-shadow:-8px 0 30px rgba(0,0,0,.35);transform:translateX(105%);visibility:hidden;transition:transform .25s,visibility .25s;overflow-y:auto}
+.nav.open .nl{transform:none;visibility:visible}
+.nlh{display:block;font-weight:800;font-size:1.1rem;color:var(--acc2);padding:4px 12px 12px;border-bottom:1px solid var(--line);margin-bottom:6px}
+.nl a{padding:12px 14px;border-radius:10px;font-size:1.05rem}
+.nlo{position:fixed;inset:0;z-index:40;background:rgba(0,0,0,.5);visibility:hidden;opacity:0;transition:opacity .25s,visibility .25s}
+.nav.open .nlo{display:block;visibility:visible;opacity:1}
+}
 .nav a{padding:2px 12px;border-radius:999px;color:var(--ink);text-decoration:none;white-space:nowrap;font-weight:600}
 .nav a:hover,.nav a:focus-visible{background:var(--acc);color:var(--bg);outline:none}
 .ct{margin:0 0 8px;font-size:1.2rem}
@@ -195,7 +208,7 @@ section{scroll-margin-top:16px}
 </g>
 </svg>
 </div>
-<nav class="nav" aria-label="أقسام الموقع"><a href="#portal">بوابة الطالب</a><a href="#sim">المحاكاة</a><a href="#quiz">الاختبار</a><a href="#laws">القوانين</a><a href="#files">الملفات</a><a href="#schedule">المواعيد</a><a href="#faq">الأسئلة</a><a href="#contact">تواصل</a><a href="/teacher.html" rel="nofollow" style="opacity:.6">دخول المعلم</a></nav>
+<nav class="nav" aria-label="أقسام الموقع"><button type="button" class="bgr" id="bgr" aria-label="القائمة" aria-expanded="false" aria-controls="nl"><span></span><span></span><span></span></button><div class="nl" id="nl"><div class="nlh">القائمة</div><a href="#portal">بوابة الطالب</a><a href="#sim">المحاكاة</a><a href="#quiz">الاختبار</a><a href="#laws">القوانين</a><a href="#files">الملفات</a><a href="#schedule">المواعيد</a><a href="#faq">الأسئلة</a><a href="#contact">تواصل</a><a href="/teacher.html" rel="nofollow" style="opacity:.6">دخول المعلم</a></div><div class="nlo" id="nlo"></div></nav>
 <main>
 <div class="brand">موقع أفق</div>
 <div class="tag">الفيزياء بوضوح</div>
@@ -688,5 +701,8 @@ var n=Number(j.count);document.getElementById('vc').textContent=n.toLocaleString
 })();
 </script>
 <script>window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments)};</script><script defer src="/_vercel/insights/script.js"></script>
+<script>(function(){var n=document.querySelector('.nav'),b=document.getElementById('bgr');if(!n||!b)return;function t(o){n.classList.toggle('open',o);b.setAttribute('aria-expanded',o)}
+b.addEventListener('click',function(){t(!n.classList.contains('open'))});document.getElementById('nlo').addEventListener('click',function(){t(false)});
+n.querySelectorAll('.nl a').forEach(function(a){a.addEventListener('click',function(){t(false)})});document.addEventListener('keydown',function(e){if(e.key==='Escape')t(false)})})();</script>
 </body>
 </html>
