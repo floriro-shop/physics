@@ -136,7 +136,7 @@ tbody tr:nth-child(even) td{background:rgba(15,40,70,.025)}
 (function(){
 var $=function(i){return document.getElementById(i)};
 var SECS=['أ','ب','ج'];
-var TABS=[['att','التحضير'],['rec','رصد الدرجات والسلوك'],['req','طلبات الفائض'],['mon','المتابعة'],['sum','الملخص'],['st','الطلاب'],['xl','إكسل'],['set','الإعدادات']];
+var TABS=[['att','التحضير'],['rec','رصد الدرجات والسلوك'],['req','طلبات الفائض'],['mon','المتابعة'],['sum','الملخص'],['sub','التسليمات'],['st','الطلاب'],['xl','إكسل'],['set','الإعدادات']];
 var RSN=[['عدم كتابة التاريخ أو اليوم',0.75,'تاريخ أو اليوم'],['عدم كتابة الدرس كاملاً (درس ناقص)',0.5,'ناقص'],['درس ناقص + عدم كتابة التاريخ أو اليوم',0.25,'ناقص + تاريخ أو يوم'],['لم يكتب الدرس',0,'لم يكتب'],['درس غير مقبول بسبب عدم التعرّف على المكتوب',0,'غير مقبول']];
 var BN=['مشاركة','دفتر','أوراق عمل','منصة','اختبار'];
 var DEF={p1a:'2026-08-23',p1b:'2026-11-19',p2a:'2026-11-22',p2b:'2027-04-01',
@@ -156,6 +156,24 @@ function fmt(c){return !c?'':(c.length===10?c.slice(0,5)+'-'+c.slice(5):c)}
 function say(t,ok){var m=$('msg');m.textContent=t||'';m.style.color=ok?'var(--ok)':'var(--bad)'}
 async function safe(p){try{await p;return true}catch(e){say('تعذّر الحفظ، حاول مرة ثانية.');return false}}
 function CF(){var c=Object.assign({},DEF,S.cfg||{});return{p:[[c.p1a,c.p1b],[c.p2a,c.p2b]],bands:DEF.bands,cat:(Array.isArray(c.cat)?c.cat:DEF.cat).map(function(x){return x.p<0&&x.b!=='مشاركة'?{n:x.n,p:x.p,b:'مشاركة'}:x}),les:Array.isArray(c.lessons)?c.lessons:[],tks:Array.isArray(c.tasks)?c.tasks:[],rp:typeof c.rp==='string'?c.rp:''}}
+var DEFPJ=[1,2,3,4,5,6,7,8].map(function(i){return {id:'w'+i,n:'ورقة عمل '+i}});
+function PROJ(){var p=(S.cfg||{}).proj;return Array.isArray(p)?p.filter(function(x){return x&&x.id&&typeof x.n==='string'}):DEFPJ}
+var SUBS={},SUBBYTES=0,SUBLOAD=false;
+function fsz(n){return n>=1e6?(Math.round(n/1e5)/10)+' م.ب':Math.max(1,Math.round(n/1e3))+' ك.ب'}
+async function loadSubs(){SUBLOAD=true;try{var j=await OFQ.subs();SUBS=j.subs||{};SUBBYTES=j.bytes||0}catch(e){say('تعذّر تحميل التسليمات.')}SUBLOAD=false;if(S.tab==='sub')fill()}
+function pjCard(){var ps=PROJ(),h='<div class="card"><h3>أنواع تسليم المشروع</h3><p class="note">الأنواع اللي يختار منها الطالب عند «تسليم مشروع» في صفحته. التعديل يغيّر الاسم فقط وتبقى الملفات المسلَّمة. الحذف يمسح ملفات هذا النوع لكل الطلاب.</p>';
+h+='<div class="row"><label style="flex:2 1 200px">'+(S.pe?'تعديل الاسم':'اسم النوع الجديد')+'<input id="pn" maxlength="60" value="'+esc(S.pe?S.pev:'')+'" placeholder="مثال: مشروع الوحدة الأولى"></label><button class="b main" data-act="'+(S.pe?'pjsave':'addpj')+'">'+(S.pe?'حفظ التعديل':'إضافة النوع')+'</button>'+(S.pe?'<button class="b" data-act="pjcancel">إلغاء</button>':'')+'</div><h4 class="bh">الأنواع الحالية</h4>';
+h+=ps.length?ps.map(function(x,i){return '<div class="r"><span>'+(i+1)+'. '+esc(x.n)+'</span><span class="grp"><button class="b" data-act="pjedit" data-id="'+esc(x.id)+'">تعديل</button><button class="b del" data-act="delpj" data-id="'+esc(x.id)+'">'+(S.pdel==='delpj'+x.id?'اضغط للتأكيد':'حذف')+'</button></span></div>'}).join(''):'<p class="note">لا توجد أنواع. أضف نوعاً ليظهر للطلاب.</p>';
+return h+'</div>'}
+async function subFile(s,pid){var m=(SUBS[s.rid]||{})[pid];if(!m)return null;var code=String(s.code||'').toUpperCase().replace(/[^A-Z0-9]/g,''),k=await OFQ.kd(code),parts=[];
+for(var i=0;i<m.n;i++){var r=await fetch('/api/sub?rid='+s.rid+'&pid='+encodeURIComponent(pid)+'&c='+i,{cache:'no-store'});if(!r.ok)throw new Error('http '+r.status);parts.push((await r.json()).d)}
+var bin=atob(parts.join('')),u=new Uint8Array(bin.length);for(var j=0;j<bin.length;j++)u[j]=bin.charCodeAt(j);
+var pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:u.slice(0,12)},k.key,u.slice(12));return {blob:new Blob([pt],{type:m.mime}),m:m}}
+function subModal(s,pn,f){var url=URL.createObjectURL(f.blob),w=document.createElement('div');w.className='wel';w.setAttribute('role','dialog');w.setAttribute('aria-modal','true');
+var isimg=/^image\//.test(f.m.mime);
+w.innerHTML='<div class="wel-c" style="max-width:520px"><div class="wel-b"><h3 style="margin:0 0 8px">'+esc(s.name)+' — '+esc(pn)+'</h3>'+(isimg?'<img src="'+url+'" alt="" style="width:100%;max-height:60vh;object-fit:contain;border-radius:10px;background:#0001">':'<p class="note">ملف PDF (' + esc(fsz(f.m.size)) + ')</p>')+'<div class="row" style="margin-top:12px"><a class="b main" style="text-decoration:none;text-align:center" href="'+url+'" download="'+esc(f.m.name)+'">حفظ الملف</a><a class="b" style="text-decoration:none;text-align:center" href="'+url+'" target="_blank" rel="noopener">فتح</a><button class="b" type="button" id="smx">إغلاق</button></div></div></div>';
+document.body.appendChild(w);function cl(){w.remove();setTimeout(function(){URL.revokeObjectURL(url)},60000);document.removeEventListener('keydown',kk)}function kk(e){if(e.key==='Escape')cl()}document.addEventListener('keydown',kk);w.addEventListener('click',function(e){if(e.target===w)cl()});document.getElementById('smx').onclick=cl}
+document.addEventListener('change',function(e){if(e.target&&e.target.id==='pjs'){S.pj=e.target.value;fill()}});
 function HOL(){var h=(S.cfg||{}).hol;return h&&typeof h==='object'?h:{}}
 
 function holCard(){var h=HOL(),ks=Object.keys(h).sort(),fm=function(d){return new Date(d+'T00:00:00Z').toLocaleDateString('ar-u-ca-gregory-nu-latn',{weekday:'long',day:'numeric',month:'long',year:'numeric',timeZone:'UTC'})};
@@ -280,7 +298,7 @@ if(sp!==tp&&!complete(S1.g,sp))return 'درجات الفترة '+PNM[sp]+' لم 
 async function saveRec(s,rec,cf){cf=cf||CF();
 var gr=(s.gr||[]).filter(function(x){return !x.pr}).concat(buildGR(rec,cf,s.att)),beh=(s.beh||[]).filter(function(x){return x.p==null}).concat(buildBeh(rec,cf));
 return safe(col.doc(s.id).update({rec:rec,gr:gr,beh:beh}))}
-async function saveCfg(part){var c=CF(),doc={p1a:c.p[0][0],p1b:c.p[0][1],p2a:c.p[1][0],p2b:c.p[1][1],cat:c.cat,lessons:c.les,tasks:c.tks,rp:c.rp,hol:HOL()};Object.assign(doc,part);
+async function saveCfg(part){var c=CF(),doc={p1a:c.p[0][0],p1b:c.p[0][1],p2a:c.p[1][0],p2b:c.p[1][1],cat:c.cat,lessons:c.les,tasks:c.tks,rp:c.rp,hol:HOL(),proj:PROJ()};Object.assign(doc,part);
 if(!await safe(cfgc.doc('main').set(doc)))return false;S.cfg=doc;return true}
 function nk(s){return String(s||'').replace(/[أإآٱ]/g,'ا').replace(/ى/g,'ي').replace(/ة/g,'ه').replace(/[\u064B-\u0652]/g,'')}
 function L(){return S.st.filter(function(s){return s.sec===S.sec}).sort(function(a,b){return nk(a.name).localeCompare(nk(b.name),'ar')||(a.order||0)-(b.order||0)})}
@@ -302,6 +320,7 @@ $('tabs').innerHTML=TABS.map(function(t){return '<button class="b" data-act="tab
 
 function build(){
 head();var f='',cf=CF();
+if(S.tab==='sub'){var pp=PROJ();if(!S.pj||!pp.some(function(x){return x.id===S.pj}))S.pj=pp.length?pp[0].id:'';f='<div class="card"><div class="row"><label style="flex:2 1 200px">نوع المشروع<select id="pjs">'+pp.map(function(x){return '<option value="'+esc(x.id)+'"'+(x.id===S.pj?' selected':'')+'>'+esc(x.n)+'</option>'}).join('')+'</select></label><button class="b" data-act="subref">تحديث</button></div><p class="note" id="sinfo"></p></div>';if(!pp.length)f+='<p class="note">لا توجد أنواع. أضف أنواعاً من الإعدادات.</p>'}
 if(S.tab==='mon')f='<div class="row"><p class="note" style="flex:1 1 200px">متابعة شعبة '+S.sec+': من يحتاج انتباهاً. تتحدث القوائم مع كل رصد.</p><button class="b main" data-act="monpdf">PDF</button></div>';
 if(S.tab==='att')f='<div class="row"><label style="flex:1 1 160px">التاريخ<input type="date" id="dt" value="'+S.date+'"></label><button class="b" id="bap" data-act="allp">الكل حاضر (لمن لم يُسجَّل)</button><button class="b" id="baa" data-act="allab">الكل غائب (لمن لم يُسجَّل)</button></div><p class="sum" id="asum"></p><p id="hbn" style="color:var(--warn);font-weight:700;margin:6px 0"></p>';
 if(S.tab==='rec'){f='<div class="card"><div class="row"><label style="flex:1 1 150px">التاريخ (تقدر تختار تاريخاً سابقاً)<input type="date" id="dt" value="'+S.date+'"></label>'+(S.kind==='l'||S.kind==='g'||S.kind==='b'||S.kind==='m'?'':'<label style="flex:2 1 200px">الطالب<select id="sel"></select></label>')+'</div>'
@@ -315,7 +334,7 @@ else f+='<div class="row"><label style="flex:2 1 220px">اسم الاختبار 
 f+='</div>'}
 if(S.tab==='st')f='<div class="card"><label>أضف طلاب ثالث '+S.sec+' (سطر لكل طالب: اسم أول أو رقم)<textarea id="names" rows="4"></textarea></label><div class="row"><button class="b main" data-act="addst">إضافة</button><button class="b" data-act="exp">تصدير رموز الشعبة</button></div><textarea id="cx" rows="6" readonly hidden></textarea></div><p class="note">كل طالب له رمز سري يدخل به على بوابة الطالب. تتحدث البوابة تلقائياً بعد كل رصد خلال فترة قصيرة.</p>';
 if(S.tab==='xl')f='<div class="card"><h3>إكسل</h3><p>الرصد من هنا في الموقع هو الأسهل ويكفيك. إكسل اختياري:</p><ol><li><b>تحميل قالب</b> لإضافة الطلاب دفعة وحدة (الشعبة والاسم).</li><li><b>استيراد</b>: يقبل القالب البسيط، أو ملف <b>afaq-gradebook.xlsx</b> الشامل (يتعرف عليه تلقائياً ويستبدل درجات وحضور وسلوك الطلاب الموجودين فيه ويحتفظ برموزهم).</li><li><b>تصدير</b>: نسخة من كل بياناتك للاحتفاظ بها.</li></ol><div class="row"><button class="b main" data-act="xtpl">تحميل قالب إكسل</button><button class="b main" data-act="ximp">استيراد من إكسل</button><button class="b" data-act="xexp">تصدير إلى إكسل</button></div><input type="file" id="xf" accept=".xlsx,.xls,.csv" hidden></div>';
-if(S.tab==='set')f='<div class="card"><h3>تواريخ الفترتين</h3><div class="row"><label>الفترة الأولى من<input type="date" id="p1a" value="'+cf.p[0][0]+'"></label><label>إلى<input type="date" id="p1b" value="'+cf.p[0][1]+'"></label></div><div class="row"><label>الفترة الثانية من<input type="date" id="p2a" value="'+cf.p[1][0]+'"></label><label>إلى<input type="date" id="p2b" value="'+cf.p[1][1]+'"></label></div><div class="row"><button class="b main" data-act="savep">حفظ التواريخ</button></div><p class="note">أي رصد خارج التاريخين لا يُحتسب في الدرجات. عند الحفظ تُعاد حسبة درجات كل الطلاب. حدود البنود: مشاركة 10، دفتر 10، أوراق عمل 10، منصة 10، اختبار 20 (المجموع 60 للفترة).</p></div>'+holCard()+'<div class="card"><h3>السلوكيات</h3><div class="row"><label style="flex:2 1 160px">اسم السلوك<input id="cn" maxlength="50"></label><label>النقاط (سالبة للسلبي)<input id="cp" type="number" step="0.5"></label><label>البند<select id="cb">'+BN.map(function(b){return '<option>'+b+'</option>'}).join('')+'</select></label><button class="b main" id="cbtn" data-act="addcat">إضافة</button><button class="b" id="ccan" data-act="cancelcat" hidden>إلغاء</button></div><p class="note" id="cnote">السلوك الإيجابي (أخضر) يمكن أن يتبع أي بند ويُستفاد من فائضه، والسلبي (أحمر) يُحسب تحت المشاركة فقط. تعديل سلوك أو حذفه لا يغيّر الرصد القديم المسجل للطلاب، بل يؤثر على الرصد الجديد فقط.</p></div>';
+if(S.tab==='set')f='<div class="card"><h3>تواريخ الفترتين</h3><div class="row"><label>الفترة الأولى من<input type="date" id="p1a" value="'+cf.p[0][0]+'"></label><label>إلى<input type="date" id="p1b" value="'+cf.p[0][1]+'"></label></div><div class="row"><label>الفترة الثانية من<input type="date" id="p2a" value="'+cf.p[1][0]+'"></label><label>إلى<input type="date" id="p2b" value="'+cf.p[1][1]+'"></label></div><div class="row"><button class="b main" data-act="savep">حفظ التواريخ</button></div><p class="note">أي رصد خارج التاريخين لا يُحتسب في الدرجات. عند الحفظ تُعاد حسبة درجات كل الطلاب. حدود البنود: مشاركة 10، دفتر 10، أوراق عمل 10، منصة 10، اختبار 20 (المجموع 60 للفترة).</p></div>'+holCard()+pjCard()+'<div class="card"><h3>السلوكيات</h3><div class="row"><label style="flex:2 1 160px">اسم السلوك<input id="cn" maxlength="50"></label><label>النقاط (سالبة للسلبي)<input id="cp" type="number" step="0.5"></label><label>البند<select id="cb">'+BN.map(function(b){return '<option>'+b+'</option>'}).join('')+'</select></label><button class="b main" id="cbtn" data-act="addcat">إضافة</button><button class="b" id="ccan" data-act="cancelcat" hidden>إلغاء</button></div><p class="note" id="cnote">السلوك الإيجابي (أخضر) يمكن أن يتبع أي بند ويُستفاد من فائضه، والسلبي (أحمر) يُحسب تحت المشاركة فقط. تعديل سلوك أو حذفه لا يغيّر الرصد القديم المسجل للطلاب، بل يؤثر على الرصد الجديد فقط.</p></div>';
 if(S.tab==='req')f='<div class="card"><div class="row"><button class="b main" data-act="upull">تحديث الطلبات</button></div><label>سبب الرفض (اختياري، يظهر للطالب عند الضغط على رفض)<input id="rn" maxlength="120"></label><details style="margin-top:10px"><summary>إضافة طلب يدوياً (من رسالة واتساب)</summary><label>الصق الرسالة<textarea id="pm" rows="4"></textarea></label><div class="row"><button class="b" data-act="uimp">إضافة الطلب</button></div></details></div>';
 $('view').innerHTML=f+'<div id="list"></div>';fill()}
 
@@ -333,6 +352,9 @@ var cfx=CF();dn.sort(function(a,b){return a.r.d<b.r.d?1:-1});
 var row=function(o,act){var r=o.r,tp=utp(r,cfx),sp=r.sp||tp,e=act?chkU(o.z,r):'';return '<div class="r"><span><b>'+esc(o.z.name)+'</b> <small>(شعبة '+esc(o.z.sec)+')</small> — '+nf(r.p)+' في '+esc(r.b)+' · الفترة '+PNM[tp]+(sp!==tp?' · من فائض الفترة '+PNM[sp]:'')+(r.note?' — '+esc(r.note):'')+(e?'<br><small style="color:var(--bad)">⚠ لا يمكن قبوله الآن: '+esc(e)+'</small>':'')+(!act?' — <b>'+(r.st==='a'?'مقبول':'مرفوض')+'</b>':'')+'</span>'+(act?'<span class="grp"><button class="b main" data-act="uacc" data-id="'+o.z.id+'" data-i="'+o.j+'">قبول</button><button class="b" data-act="urej" data-id="'+o.z.id+'" data-i="'+o.j+'">رفض</button></span>':'')+'</div>'};
 ls.innerHTML='<h3>الطلبات المعلّقة ('+pl.length+')</h3>'+(pl.map(function(o){return row(o,1)}).join('')||'<p class="note">لا توجد طلبات معلّقة.</p>')+(dn.length?'<h3 style="margin-top:14px">آخر القرارات</h3>'+dn.slice(0,15).map(function(o){return row(o,0)}).join(''):'');return}
 var empty='<p class="note">لا يوجد طلاب في هذه الشعبة بعد. أضفهم من قسم «الطلاب» أو استوردهم من إكسل.</p>';
+if(S.tab==='sub'){var pj=S.pj,pnm=(PROJ().filter(function(x){return x.id===pj})[0]||{}).n||'',dn2=0;
+h=l.map(function(s,i){var m=s.rid&&(SUBS[s.rid]||{})[pj];if(m)dn2++;return '<div class="r"><span>'+(i+1)+'. '+esc(s.name)+(m?' <small>('+esc(fsz(m.size))+' · '+esc(String(m.upd).slice(0,10))+')</small>':'')+'</span><span class="grp">'+(m?'<button class="b main" data-act="subview" data-id="'+s.id+'">عرض</button><button class="b del" data-act="subdel" data-id="'+s.id+'">'+(S.pdel==='subdel'+s.id+pj?'اضغط للتأكيد':'حذف')+'</button>':'<small>لم يسلّم</small>')+'</span></div>'}).join('')||empty;
+if(!pj)h='';ls.innerHTML=h;var si=$('sinfo');if(si)si.textContent=(SUBLOAD?'جارٍ التحميل... ':'')+'سلّم '+dn2+' من '+l.length+' · المساحة المستخدمة: '+(Math.round(SUBBYTES/1e5)/10)+' من 150 م.ب';return}
 if(S.tab==='mon'){h=monHtml(l)}
 if(S.tab==='att'){var c={p:0,a:0,l:0,e:0};
 h=l.map(function(s,i){var v=(s.att||{})[S.date]||'';if(c[v]!==undefined)c[v]++;
@@ -465,7 +487,7 @@ if(!silent||n)say(n?'وصل '+n+' طلب جديد.':'لا توجد طلبات ج
 async function act(b){
 var a=b.dataset.act,id=b.dataset.id,v=b.dataset.v,i=b.dataset.i;say('');
 if(a==='sec'){S.sec=v;S.sel='';S.pdel='';build();return}
-if(a==='tab'){S.tab=v;S.sel='';S.pdel='';S.ed=null;build();if(v==='req')pullReq(true);return}
+if(a==='tab'){S.tab=v;S.sel='';S.pdel='';S.ed=null;build();if(v==='req')pullReq(true);if(v==='sub')loadSubs();return}
 if(a==='rk'){S.kind=v;build();return}
 if(a==='sper'){S.per=+v;fill();return}
 if((a==='att'||a==='allp'||a==='allab')&&wk(S.date)){say(holName(S.date)+': لا يُسجَّل فيها تحضير.');return}
@@ -546,6 +568,14 @@ if(a==='uacc'){var e5=chkU(s5,r5);if(e5){say('لا يمكن القبول: '+e5);
 else{var rn=$('rn')?$('rn').value.trim():'';ar5[+i]=Object.assign({},r5,{st:'r',note:rn||r5.note||''})}
 if(await saveRec(s5,ar5)){say(a==='uacc'?'تم قبول الطلب وتحديث الدرجات.':'تم رفض الطلب.',true)}return}
 if(a==='delrec'){if(!confirmed(b.dataset.k))return;var s4=byId(id),ar=(s4.rec||[]).slice();ar.splice(+i,1);await saveRec(s4,ar);return}
+if(a==='subref'){await loadSubs();return}
+if(a==='subview'){var sv=byId(id);if(!sv||!sv.rid)return;say('جارٍ فتح الملف...',true);try{var ff=await subFile(sv,S.pj);if(!ff){say('لا يوجد ملف.');return}say('');subModal(sv,(PROJ().filter(function(x){return x.id===S.pj})[0]||{}).n||'',ff)}catch(e){say('تعذّر فتح الملف.')}return}
+if(a==='subdel'){var sd=byId(id);if(!sd||!sd.rid)return;if(!confirmed('subdel'+id+S.pj)){fill();return}try{await OFQ.subop({o:'subdel',rid:sd.rid,pid:S.pj});if(SUBS[sd.rid]){delete SUBS[sd.rid][S.pj]}say('حُذف الملف.',true);loadSubs()}catch(e){say('تعذّر الحذف.')}fill();return}
+if(a==='addpj'){var pn=($('pn')?$('pn').value:'').trim().slice(0,60);if(!pn){say('اكتب اسم النوع.');return}var pl=PROJ().slice();if(pl.some(function(x){return x.n===pn})){say('هذا النوع موجود.');return}pl.push({id:'p'+Date.now().toString(36),n:pn});if(await saveCfg({proj:pl})){say('أُضيف النوع.',true);build()}return}
+if(a==='pjedit'){var px=PROJ().filter(function(x){return x.id===id})[0];if(!px)return;S.pe=id;S.pev=px.n;build();if($('pn'))$('pn').focus();return}
+if(a==='pjcancel'){S.pe=null;build();return}
+if(a==='pjsave'){var pn2=($('pn')?$('pn').value:'').trim().slice(0,60);if(!pn2){say('اكتب الاسم.');return}var pl2=PROJ().map(function(x){return x.id===S.pe?{id:x.id,n:pn2}:x});if(await saveCfg({proj:pl2})){S.pe=null;say('تم تعديل الاسم.',true);build()}return}
+if(a==='delpj'){if(!confirmed('delpj'+id)){build();return}var pl3=PROJ().filter(function(x){return x.id!==id});if(await saveCfg({proj:pl3})){try{await OFQ.subop({o:'subpurge',pid:id})}catch(e){}Object.keys(SUBS).forEach(function(r){delete SUBS[r][id]});say('حُذف النوع وملفاته.',true);build()}return}
 if(a==='addhol'){var hd=$('hd')?$('hd').value:'',ht=$('ht')?$('ht').value:'',hn=$('hn')?$('hn').value.trim().slice(0,40):'';if(!hd){say('اختر تاريخ الإجازة.');return}
 var htt=ht==='other'?hn:ht;if(!htt){say('اكتب اسم الإجازة.');return}if(busy)return;busy=true;
 var hh=Object.assign({},HOL());hh[hd]={t:htt};
@@ -601,7 +631,7 @@ function b64d(x){var b=atob(x),u=new Uint8Array(b.length);for(var i=0;i<b.length
 function b64e(u){var x='';for(var i=0;i<u.length;i++)x+=String.fromCharCode(u[i]);return btoa(x)}
 function hexs(u){return Array.from(u).map(function(v){return v.toString(16).padStart(2,'0')}).join('')}
 var KEY='';try{KEY=localStorage.getItem('ofq_key')||sessionStorage.getItem('ofq_key')||''}catch(e){}
-function call(method,body){return fetch('/api/db',{method:method,headers:{'content-type':'application/json','x-key':KEY},body:body?JSON.stringify(body):undefined,cache:'no-store'})}
+function call(method,body,qs){return fetch('/api/db'+(qs||''),{method:method,headers:{'content-type':'application/json','x-key':KEY},body:body?JSON.stringify(body):undefined,cache:'no-store'})}
 function loginForm(msg){return new Promise(function(ok){
 $v.innerHTML='<div class="card" style="max-width:420px;margin:40px auto"><h3>لوحة المعلم</h3><label>كلمة السر<input id="lk" type="password" autocomplete="current-password"></label><label style="display:flex;gap:8px;align-items:center;justify-content:flex-end;margin-top:8px"><input type="checkbox" id="lr2" style="width:20px;height:20px;margin:0;flex:none;accent-color:var(--acc)"><span>تذكرني</span></label><div class="row"><button class="b main" id="lgo">دخول</button></div><p class="note" id="lmsg" style="color:var(--bad)">'+(msg||'')+'</p></div>';
 function go(){var v=$('lk').value;if(!v)return;KEY=v;var rm=$('lr2').checked;$('lmsg').textContent='جارٍ التحقق...';
@@ -642,13 +672,13 @@ async function post(ops){for(var k=0;k<ops.length;k+=40){var r=await call('POST'
 var kc={};
 async function kd(code){if(kc[code])return kc[code];var km=await crypto.subtle.importKey('raw',new TextEncoder().encode(code),'PBKDF2',false,['deriveBits']);
 var bits=new Uint8Array(await crypto.subtle.deriveBits({name:'PBKDF2',salt:SALT,iterations:IT,hash:'SHA-256'},km,384));
-var r={key:await crypto.subtle.importKey('raw',bits.slice(0,32),'AES-GCM',false,['encrypt']),id:hexs(bits.slice(32,48))};kc[code]=r;return r}
+var r={key:await crypto.subtle.importKey('raw',bits.slice(0,32),'AES-GCM',false,['encrypt','decrypt']),id:hexs(bits.slice(32,48))};kc[code]=r;return r}
 async function mkRep(s){var code=String(s.code||'').toUpperCase().replace(/[^A-Z0-9]/g,'');if(!code)return null;var k=await kd(code);
 var att=s.att||{},a=[],l=[],e=[],p=0;Object.keys(att).sort().forEach(function(d){if(wk(d))return;if(att[d]==='p')p++;else if(att[d]==='a')a.push(d);else if(att[d]==='l')l.push(d);else if(att[d]==='e')e.push(d)});
 var pl=JSON.stringify({n:s.name,sec:s.sec,p:p,a:a,l:l,e:e,b:s.beh||[],g:s.gr||[]});
 var iv=crypto.getRandomValues(new Uint8Array(12)),ct=new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv:iv},k.key,new TextEncoder().encode(pl)));
 return{id:k.id,v:{iv:b64e(iv),ct:b64e(ct),upd:today()}}}
-async function pushStudent(id){var s=ST[id];if(!s)return;var rp=await mkRep(s),ops;if(rp)s.rid=rp.id;ops=[{o:'sset',id:id,d:s}];if(rp)ops.push({o:'rset',id:rp.id,v:rp.v});await post(ops)}
+async function pushStudent(id){var s=ST[id];if(!s)return;var rp=await mkRep(s),ops,oldr=s.rid;if(rp)s.rid=rp.id;ops=[{o:'sset',id:id,d:s}];if(rp)ops.push({o:'rset',id:rp.id,v:rp.v});if(rp&&oldr&&oldr!==rp.id)ops.push({o:'rdel',id:oldr});await post(ops)}
 async function reload(){try{var r=await call('GET');if(r.status!==200)return;var j=await r.json(),n={};(j.students||[]).forEach(function(z){var o=Object.assign({},z);delete o.id;n[z.id]=o});
 if(JSON.stringify(n)!==JSON.stringify(ST)||JSON.stringify(j.cfg||null)!==JSON.stringify(CFG)){ST=n;CFG=j.cfg||null;emit();emitCfg()}}catch(e){}}
 function mg(o,d){for(var k in d){if(d[k]&&typeof d[k]==='object'&&!Array.isArray(d[k]))o[k]=Object.assign({},o[k],d[k]);else o[k]=d[k]}}
@@ -657,13 +687,15 @@ col={onSnapshot:function(cb){colCb=cb;emit();return function(){}},
 doc:function(id){return{
 update:function(d){return enqueue(async function(){var o=ST[id];if(!o)throw new Error('none');mg(o,JSON.parse(JSON.stringify(d)));emit();try{await pushStudent(id)}catch(e){await reload();throw e}})},
 set:function(d){return enqueue(async function(){var o=JSON.parse(JSON.stringify(d));delete o.id;ST[id]=o;emit();try{await pushStudent(id)}catch(e){await reload();throw e}})},
-delete:function(){return enqueue(async function(){var o=ST[id];if(!o)return;delete ST[id];emit();var ops=[{o:'sdel',id:id}];if(o.rid)ops.push({o:'rdel',id:o.rid});try{await post(ops)}catch(e){await reload();throw e}})}}},
+delete:function(){return enqueue(async function(){var o=ST[id];if(!o)return;delete ST[id];emit();var ops=[{o:'sdel',id:id}];if(o.rid){ops.push({o:'rdel',id:o.rid});ops.push({o:'suball',rid:o.rid})}try{await post(ops)}catch(e){await reload();throw e}})}}},
 add:function(d){return enqueue(async function(){var id=gid(),o=JSON.parse(JSON.stringify(d));delete o.id;ST[id]=o;emit();try{await pushStudent(id)}catch(e){await reload();throw e}return{id:id}})}};
 cfgc={onSnapshot:function(cb){cfgCb=cb;emitCfg();return function(){}},
 doc:function(id){return{set:function(d){return enqueue(async function(){var o=JSON.parse(JSON.stringify(d));CFG=o;emitCfg();try{await post([{o:'cset',d:o}])}catch(e){await reload();throw e}})}}}};
 dl={save:async function(o){var nm=o.filename||'file',ext=(nm.split('.').pop()||'').toLowerCase(),mime={pdf:'application/pdf',json:'application/json',txt:'text/plain;charset=utf-8',xlsx:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}[ext]||'application/octet-stream';
 var blob=new Blob([o.data],{type:mime}),u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download=nm;document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(u)},60000);return{status:'saved'}}};
 window.OFQ={
+kd:kd,subs:async function(){var r=await call('GET',null,'?subs=1');if(r.status!==200)throw new Error('http '+r.status);return r.json()},subop:function(op){return enqueue(function(){return post([op])})},
+
 exp:async function(){var data=JSON.stringify({v:1,cfg:CFG,students:ST});await dl.save({filename:'ofuq-backup-'+today()+'.json',data:data});say('تم تجهيز النسخة الاحتياطية.',true)},
 syncAll:async function(show){var ids=Object.keys(ST),n=0;for(var id of ids){try{await enqueue(function(){return pushStudent(id)});n++}catch(e){say('تعذّرت المزامنة عند الطالب '+(n+1)+'.');return}if(show&&n%5===0)say('جارٍ المزامنة '+n+' / '+ids.length+'...',true)}emit();if(show)say('تمت مزامنة '+n+' طالب مع الموقع.',true)},
 imp:async function(file){try{var j=JSON.parse(await file.text());if(!j||typeof j.students!=='object'){say('الملف غير صالح.');return}

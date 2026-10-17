@@ -133,6 +133,12 @@ section{scroll-margin-top:16px}
 .brand{font-size:clamp(3rem,13vw,5.5rem);font-weight:700;line-height:1.2;text-align:center;color:var(--acc2);padding:36px 0 0;text-shadow:0 0 40px color-mix(in srgb,var(--acc2) 40%,transparent)}
 .tag{text-align:center;color:var(--mute);font-size:clamp(1.05rem,3.5vw,1.4rem);font-weight:600}
 .hero{padding-top:20px}
+
+@media print{body>*:not(#pov){display:none!important}body{overflow:visible!important;background:#fff!important}#pov{position:static!important;inset:auto!important;overflow:visible!important;height:auto!important}.povbar,.noprint{display:none!important}}
+.subbox{display:grid;gap:10px;margin:8px 0}
+.subbox select,.subbox input[type=file]{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink);font:inherit}
+.subrow{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 2px;border-bottom:1px solid var(--line)}
+.subrow .btn2{margin:0}
 </style>
 </head>
 <body>
@@ -505,6 +511,7 @@ if(window.QRCode&&/^https?:/.test(location.href)){new QRCode($('qr'),{text:locat
 })();
 (function(){
 var $=function(i){return document.getElementById(i)};
+var SESS=null;
 function msg(t){$('pmsg').textContent=t||''}
 function b64(s){return Uint8Array.from(atob(s),function(c){return c.charCodeAt(0)})}
 function hex(u){return Array.prototype.map.call(u,function(x){return ('0'+x.toString(16)).slice(-2)}).join('')}
@@ -514,8 +521,41 @@ function sv(n,at,tx){var e=document.createElementNS('http://www.w3.org/2000/svg'
 function sec(o,t){o.appendChild(el('h3','ct',t))}
 function closeP(){var ov=$('pov');ov.innerHTML='';ov.hidden=true;document.body.style.overflow='';$('pcode').value='';msg('')}
 document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!$('pov').hidden)closeP()});
+
+function b64e(u){var s='';for(var i=0;i<u.length;i+=32768)s+=String.fromCharCode.apply(null,u.subarray(i,i+32768));return btoa(s)}
+function szt(n){return n>=1e6?nf(n/1e6)+' م.ب':Math.max(1,Math.round(n/1e3))+' ك.ب'}
+function jget(u){return fetch(u,{cache:'no-store'}).then(function(r){if(!r.ok)throw r.status;return r.json()})}
+function toJpeg(file){return new Promise(function(ok,bad){var im=new Image(),u=URL.createObjectURL(file);im.onload=function(){var M=1800,w=im.naturalWidth,h=im.naturalHeight,k=Math.min(1,M/Math.max(w,h)),c=document.createElement('canvas');c.width=Math.round(w*k);c.height=Math.round(h*k);var g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,c.width,c.height);g.drawImage(im,0,0,c.width,c.height);URL.revokeObjectURL(u);c.toBlob(function(b){b?ok(b):bad(0)},'image/jpeg',0.82)};im.onerror=function(){URL.revokeObjectURL(u);bad(0)};im.src=u})}
+async function subUpload(pid,file,say){
+var mime=file.type,blob=file,name=file.name||'file';
+if(mime==='application/pdf'){if(file.size>3000000)throw 'حجم الملف كبير: الحد 3 ميغا. صغّر الملف أو صوّره كصورة.'}
+else if(/^image\//.test(mime)){try{blob=await toJpeg(file);mime='image/jpeg';name=name.replace(/\.[^.]+$/,'')+'.jpg'}catch(e){throw 'تعذّر قراءة الصورة. جرّب صورة أخرى أو PDF.'}if(blob.size>3000000)throw 'حجم الصورة كبير بعد الضغط. صوّرها بدقة أقل.'}
+else throw 'الملف لازم يكون PDF أو صورة.';
+var raw=new Uint8Array(await blob.arrayBuffer()),iv=crypto.getRandomValues(new Uint8Array(12)),ct=new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv:iv},SESS.key,raw)),all=new Uint8Array(12+ct.length);all.set(iv,0);all.set(ct,12);
+var d=b64e(all),CH=600000,n=Math.ceil(d.length/CH),sid=Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+var post=function(o){return fetch('/api/sub',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(o)}).then(function(r){if(!r.ok){var e=new Error('http');e.st=r.status;throw e}return r.json()})};
+for(var i=0;i<n;i++){say('جارٍ الرفع '+Math.round(i/n*100)+'%...');await post({a:'chunk',rid:SESS.rid,pid:pid,sid:sid,i:i,n:n,d:d.slice(i*CH,(i+1)*CH)})}
+say('جارٍ التثبيت...');await post({a:'commit',rid:SESS.rid,pid:pid,sid:sid,n:n,name:name,mime:mime,size:raw.length})}
+function subErr(e){if(typeof e==='string')return e;var s=e&&e.st;return s===404?'تعذّر التسليم: رمزك غير مفعّل أو النوع محذوف.':s===429?'محاولات كثيرة. انتظر دقيقة ثم أعد المحاولة.':s===507?'مساحة التخزين ممتلئة. تواصل مع المعلم.':s===413?'حجم الملف كبير.':'تعذّر الرفع. تأكد من الاتصال وأعد المحاولة.'}
+async function subView(pid,m){var parts=[];for(var i=0;i<m.n;i++){var j=await jget('/api/sub?rid='+SESS.rid+'&pid='+encodeURIComponent(pid)+'&c='+i);parts.push(j.d)}
+var bin=atob(parts.join('')),u=new Uint8Array(bin.length);for(var k=0;k<bin.length;k++)u[k]=bin.charCodeAt(k);
+var pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:u.slice(0,12)},SESS.key,u.slice(12));var url=URL.createObjectURL(new Blob([pt],{type:m.mime})),a=document.createElement('a');a.href=url;a.target='_blank';a.rel='noopener';a.download=m.name;document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(url)},60000)}
+function subSec(o){
+var w=el('div','noprint');sec(w,'تسليم مشروع');var box=el('div','subbox');w.appendChild(box);o.appendChild(w);box.appendChild(el('p','dmut','جارٍ التحميل...'));
+function render(T,M){box.innerHTML='';var P=T.proj||[],S=M.subs||{};
+if(!P.length){box.appendChild(el('p','dmut','لا توجد مشاريع مطلوبة حالياً.'));return}
+var sl=el('select');sl.setAttribute('aria-label','نوع المشروع');P.forEach(function(p){var op=el('option',null,p.n);op.value=p.id;sl.appendChild(op)});
+var fi=el('input');fi.type='file';fi.accept='application/pdf,image/*';fi.setAttribute('aria-label','الملف');
+var bt=el('button','btn2','تسليم');bt.type='button';var ms=el('p','dmut','');
+bt.addEventListener('click',async function(){if(!fi.files.length){ms.textContent='اختر الملف أولاً.';return}bt.disabled=true;
+try{await subUpload(sl.value,fi.files[0],function(t){ms.textContent=t});ms.textContent='تم التسليم بنجاح.';fi.value='';var M2=await jget('/api/sub?rid='+SESS.rid);render(T,M2);var m2=el('p','dmut','تم التسليم بنجاح.');box.insertBefore(m2,box.firstChild)}catch(e){ms.textContent=subErr(e);bt.disabled=false}});
+[sl,fi,bt,ms].forEach(function(e){box.appendChild(e)});
+box.appendChild(el('p','dmut','PDF أو صورة، حتى 3 ميغا. التسليم الجديد لنفس النوع يستبدل القديم.'));
+P.forEach(function(p){var m=S[p.id],r=el('div','subrow'),t=el('span',null,p.n);if(m){t.appendChild(el('small','dmut',' · سُلّم '+String(m.upd).slice(0,10)+' · '+szt(m.size)))}else t.appendChild(el('small','dmut',' · لم يُسلَّم'));r.appendChild(t);
+if(m){var v=el('button','btn2','عرض');v.type='button';v.addEventListener('click',function(){v.disabled=true;subView(p.id,m).catch(function(){ms.textContent='تعذّر فتح الملف.'}).then(function(){v.disabled=false})});r.appendChild(v)}box.appendChild(r)})}
+Promise.all([jget('/api/sub?types=1'),jget('/api/sub?rid='+SESS.rid)]).then(function(r){render(r[0],r[1])}).catch(function(){box.innerHTML='';box.appendChild(el('p','dmut','تعذّر تحميل التسليمات الآن.'))})}
 function show(r,upd){var ov=$('pov');ov.innerHTML='';ov.hidden=false;document.body.style.overflow='hidden';
-var bar=el('div','povbar');bar.appendChild(el('b',null,'موقع أفق · لوحة الطالب'));var cb=el('button','btn2','خروج');cb.type='button';cb.addEventListener('click',closeP);bar.appendChild(cb);ov.appendChild(bar);
+var bar=el('div','povbar');bar.appendChild(el('b',null,'موقع أفق · لوحة الطالب'));var pb=el('button','btn2','PDF');pb.type='button';pb.addEventListener('click',function(){window.print()});var bx=el('div');bx.style.cssText='display:flex;gap:8px';bx.appendChild(pb);var cb=el('button','btn2','خروج');cb.type='button';cb.addEventListener('click',closeP);bx.appendChild(cb);bar.appendChild(bx);ov.appendChild(bar);
 var o=el('div','in');ov.appendChild(o);
 var pos=r.b.filter(function(x){return x.k==='pos'}).length,neg=r.b.filter(function(x){return x.k==='neg'}).length,sa=0,sm=0,dt=0;
 r.g.forEach(function(x){sa+=+x.s;sm+=+x.m;dt+=Math.max(0,x.m-x.s)});
@@ -601,7 +641,7 @@ if(UR.length){o.appendChild(el('p','dmut','طلباتي:'));UR.slice().reverse()
 sec(o,'ملاحظات السلوك');
 if(!r.b.filter(function(x){return x.k!=='use'}).length)o.appendChild(el('p',null,'لا توجد ملاحظات سلوك.'));
 r.b.filter(function(x){return x.k!=='use'}).reverse().forEach(function(x){var d=el('div','dbh'+(x.k==='pos'?'':' neg'));d.appendChild(el('p',null,(x.k==='pos'?'سلوك إيجابي':'سلوك سلبي')+(x.p!=null?' ('+(x.p>0?'+':'')+nf(x.p)+')':'')+' · '+x.d));if(x.n)d.appendChild(el('p','dmut',x.n));o.appendChild(d)});
-var x=el('button','btn2','خروج');x.type='button';x.addEventListener('click',closeP);o.appendChild(x);ov.scrollTop=0;cb.focus&&cb.focus()}
+subSec(o);var x=el('button','btn2','خروج');x.type='button';x.addEventListener('click',closeP);x.className+=' noprint';o.appendChild(x);ov.scrollTop=0;cb.focus&&cb.focus()}
 async function go(){
 var raw=$('pcode').value.toUpperCase().replace(/[^A-Z0-9]/g,'');
 if(raw.length!==6&&raw.length!==10){msg('الرمز مكوّن من 6 أرقام.');return}
@@ -617,6 +657,7 @@ if(!rs.ok){msg('تعذّر الاتصال، أعد المحاولة بعد قل�
 var e=await rs.json();
 var key=await crypto.subtle.importKey('raw',bits.slice(0,32),'AES-GCM',false,['decrypt']);
 var pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:b64(e.iv)},key,b64(e.ct));
+SESS={rid:hex(bits.slice(32,48)),key:await crypto.subtle.importKey('raw',bits.slice(0,32),'AES-GCM',false,['encrypt','decrypt'])};
 msg('');show(JSON.parse(new TextDecoder().decode(pt)),e.upd)
 }catch(x){msg('الرمز غير صحيح.')}}
 $('pgo').addEventListener('click',go);

@@ -19,6 +19,18 @@ function readBody(req) {
   });
 }
 const IDRE = /^[A-Za-z0-9_-]{1,40}$/, RIDRE = /^[0-9a-f]{32}$/;
+async function delSub(rid, pid) {
+  const h = (await pipe([['HGET', 'ofuq:sub:' + rid, pid]]))[0].result; if (!h) return;
+  let m = null; try { m = JSON.parse(h); } catch (e) { }
+  const c = [['HDEL', 'ofuq:sub:' + rid, pid]];
+  if (m && m.sid) { for (let i = 0; i < (m.n || 0) && i < 10; i++) c.push(['DEL', 'ofuq:sc:' + rid + ':' + pid + ':' + m.sid + ':' + i]); if (m.len) c.push(['DECRBY', 'ofuq:subbytes', m.len]); }
+  await pipe(c);
+}
+async function delAllSub(rid) {
+  const ks = (await pipe([['HKEYS', 'ofuq:sub:' + rid]]))[0].result || [];
+  for (const k of ks) await delSub(rid, k);
+  await pipe([['DEL', 'ofuq:sub:' + rid], ['SREM', 'ofuq:subrids', rid]]);
+}
 module.exports = async function (req, res) {
   try {
     const key = process.env.TEACHER_KEY;
@@ -32,6 +44,14 @@ module.exports = async function (req, res) {
       if (Number(fl[0].result || 0) >= 10) return send(res, 429, { error: 'too-many' });
       await pipe([['INCR', fk], ['EXPIRE', fk, 600]]);
       return send(res, 401, { error: 'bad-key' });
+    }
+    if (req.method === 'GET' && /(?:^|[?&])subs=1(?:&|$)/.test(String(req.url || ''))) {
+      const rids = (await pipe([['SMEMBERS', 'ofuq:subrids']]))[0].result || [];
+      const out = rids.length ? await pipe(rids.map((r) => ['HGETALL', 'ofuq:sub:' + r])) : [];
+      const subs = {};
+      rids.forEach((r, k) => { const a = out[k].result || [], m = {}; for (let j = 0; j < a.length; j += 2) { try { m[a[j]] = JSON.parse(a[j + 1]); } catch (e) { } } if (Object.keys(m).length) subs[r] = m; });
+      const bt = (await pipe([['GET', 'ofuq:subbytes']]))[0].result;
+      return send(res, 200, { subs, bytes: Number(bt || 0) });
     }
     if (req.method === 'GET') {
       const ids = (await pipe([['SMEMBERS', 'ofuq:stids']]))[0].result || [];
@@ -60,11 +80,18 @@ module.exports = async function (req, res) {
       } else if (o.o === 'rset' && RIDRE.test(o.id) && o.v && typeof o.v.iv === 'string' && typeof o.v.ct === 'string') {
         const j = JSON.stringify({ iv: o.v.iv, ct: o.v.ct, upd: String(o.v.upd || '').slice(0, 10) }); if (j.length > 200000) return send(res, 413, { error: 'big' });
         cmds.push(['SET', 'ofuq:rep:' + o.id, j]);
+      } else if (o.o === 'subdel' && RIDRE.test(o.rid) && IDRE.test(o.pid)) {
+        await delSub(o.rid, o.pid);
+      } else if (o.o === 'suball' && RIDRE.test(o.rid)) {
+        await delAllSub(o.rid);
+      } else if (o.o === 'subpurge' && IDRE.test(o.pid)) {
+        const rids = (await pipe([['SMEMBERS', 'ofuq:subrids']]))[0].result || [];
+        for (const r of rids) await delSub(r, o.pid);
       } else if (o.o === 'rdel' && RIDRE.test(o.id)) {
         cmds.push(['DEL', 'ofuq:rep:' + o.id]);
       } else return send(res, 400, { error: 'bad-op' });
     }
-    await pipe(cmds);
+    if (cmds.length) await pipe(cmds);
     return send(res, 200, { ok: true, n: ops.length });
   } catch (e) { return send(res, 500, { error: 'server' }); }
 };
