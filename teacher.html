@@ -60,14 +60,57 @@ ol{margin:6px 0;padding-inline-start:1.3em}
 .cat.pos span{color:var(--ok)}.cat.neg span{color:var(--bad)}
 .bh{margin:12px 0 0;font-size:1rem;color:var(--acc)}
 .cat:active{transform:scale(.97)}
+
+/* ===== تصميم أفق ===== */
+:root{--navy:#0c1c30;--navy2:#13304d;--horizon:#f2a33a;--acc:#0f6e86;--bg:#eef2f6;--ink:#0f2238;--line:#dbe3ec;--shadow:0 1px 0 rgba(15,40,70,.05),0 10px 26px -14px rgba(15,40,70,.28)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#08121e;--card:#0f2036;--line:#1f3752;--acc:#3fc3d6;--shadow:0 1px 0 rgba(0,0,0,.3),0 10px 26px -14px rgba(0,0,0,.6)}}
+body{background:var(--bg)}
+.top{background:linear-gradient(180deg,var(--navy),var(--navy2));color:#eaf2fa;position:relative;padding:max(14px,env(safe-area-inset-top)) 0 16px}
+.top::after{content:"";position:absolute;inset-inline:0;bottom:0;height:3px;background:linear-gradient(90deg,#0f6e86,var(--horizon) 45%,#0f6e86)}
+.top-in{max-width:900px;margin:0 auto;padding:0 16px}
+.brand{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.top h1{font-size:1.35rem;margin:0;line-height:1.3;color:#fff}
+.top .sub{color:#9db6cf;margin:0;font-size:.85rem}
+#secs{margin:0;gap:0;background:rgba(255,255,255,.09);border-radius:14px;padding:4px;display:grid;grid-template-columns:repeat(3,1fr)}
+#secs .b{background:transparent;color:#cfe0f0;border:0;border-radius:11px;padding:8px 0;text-align:center;font-weight:600;transition:background .15s,color .15s}
+#secs .b[aria-pressed="true"]{background:#fff;color:var(--navy);box-shadow:0 2px 8px rgba(0,0,0,.25)}
+.strip{position:sticky;top:0;z-index:50;display:flex;align-items:stretch;background:var(--card);border-bottom:1px solid var(--line);box-shadow:0 6px 16px -12px rgba(15,40,70,.4)}
+#tabs{margin:0;flex:1;flex-wrap:nowrap;overflow-x:auto;gap:2px;padding:0 8px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+#tabs::-webkit-scrollbar{display:none}
+#tabs .b{flex:none;background:transparent;color:var(--mute);border:0;border-radius:0;border-bottom:3px solid transparent;padding:12px 14px 9px;white-space:nowrap;font-weight:600}
+#tabs .b[aria-pressed="true"]{background:transparent;color:var(--ink);border-bottom-color:var(--horizon)}
+.lgout{flex:none;margin:7px 8px;background:#d93025;color:#fff;border:0;border-radius:10px;padding:0 12px;font:600 .8rem inherit;font-family:inherit;cursor:pointer;white-space:nowrap}
+.lgout:hover{background:#b9261c}.lgout:focus-visible{outline:3px solid var(--horizon);outline-offset:2px}
+main{padding-top:14px;padding-bottom:40px}
+.card{border:0;border-radius:18px;padding:16px;box-shadow:var(--shadow)}
+.card h3{font-size:1.05rem;margin:0 0 8px;color:var(--ink)}
+.b{padding:8px 16px;min-height:40px;transition:background .15s,border-color .15s,transform .1s}
+.b:active{transform:scale(.97)}
+.b.main{background:var(--acc);color:#fff;border-color:var(--acc);box-shadow:0 6px 14px -8px var(--acc)}
+.b[aria-pressed="true"]{color:#fff}
+.b.del{min-height:0}
+input,select,textarea{border-radius:12px;background:var(--card);border:1px solid var(--line);padding:9px 12px}
+input:focus,select:focus,textarea:focus{border-color:var(--acc)}
+.r{padding:10px 4px}
+.cat{border-radius:14px;box-shadow:var(--shadow);border:0}
+.cats{gap:10px}
+table{border-radius:12px;overflow:hidden}
+th{background:rgba(15,110,134,.08);color:var(--ink);font-weight:700}
+tbody tr:nth-child(even) td{background:rgba(15,40,70,.025)}
+.bh{font-weight:700}
+#msg:empty,#secs:empty,.strip:not(:has(button)){display:none}#msg{margin:0 0 8px}
+.lgout{padding:0 10px;font-size:.75rem}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
 <body>
-<main>
-<h1>لوحة المعلم</h1>
-<p class="sub">موقع أفق · خاصة بك فقط · مرتبطة بإكسل</p>
+<header class="top"><div class="top-in">
+<div class="brand"><svg viewBox="0 0 40 40" width="38" height="38" aria-hidden="true"><path d="M5 27a15 15 0 0 1 30 0z" fill="#f2a33a"/><path d="M2 27h36" stroke="#9fe3ee" stroke-width="2.4" stroke-linecap="round"/><path d="M9 33h22" stroke="#9fe3ee" stroke-width="2" stroke-linecap="round" opacity=".55"/></svg>
+<div><h1>لوحة المعلم</h1><p class="sub">موقع أفق · خاصة بك فقط · تُحفظ تلقائياً</p></div></div>
 <div class="bar" id="secs" role="group" aria-label="الشعبة"></div>
-<div class="bar" id="tabs" role="group" aria-label="القسم"></div>
+</div></header>
+<nav class="strip" id="strip" aria-label="القسم"><div class="bar" id="tabs" role="group" aria-label="القسم"></div></nav>
+<main>
 <p id="msg" role="status" aria-live="polite"></p>
 <div id="view"><p class="note">جارٍ التحميل...</p></div>
 </main>
@@ -279,7 +322,7 @@ var sp1=surp(st,1),sp2=surp(st,2);
 h=pend+'<h3>درجات '+esc(st.name)+'</h3>'+scoreHtml(st)+'<p class="note">الفائض المتاح: الفترة الأولى <b>'+nf(sp1.pool)+'</b> · الفترة الثانية <b>'+nf(sp2.pool)+'</b></p><h3 style="margin-top:14px">آخر الرصدات</h3>'+(rec.map(function(o){var r=o.r;if(r.k==='u'){var stt=r.st||'p';return '<div class="r"><span><b class="tag '+(stt==='a'?'pos':(stt==='r'?'neg':''))+'">فائض '+nf(r.p)+'</b> '+esc(r.b)+' — '+({p:'قيد المراجعة',a:'مقبول',r:'مرفوض'}[stt])+(r.note?' — '+esc(r.note):'')+' <small>'+esc(r.d)+'</small></span><span class="grp">'+(stt==='p'?'<button class="b main" data-act="uacc" data-id="'+st.id+'" data-i="'+o.i+'">قبول</button><button class="b" data-act="urej" data-id="'+st.id+'" data-i="'+o.i+'">رفض</button>':'')+delBtn('delrec',st.id,o.i)+'</span></div>'}return '<div class="r"><span><b class="tag '+(r.p<0?'neg':'pos')+'">'+(r.p>0?'+':'')+nf(r.p)+'</b> '+esc(r.n)+(r.note?' — '+esc(r.note):'')+' <small>'+esc(r.b)+' · '+esc(r.d)+'</small></span>'+delBtn('delrec',st.id,o.i)+'</div>'}).join('')||'<p class="note">لا توجد رصدات بعد.</p>')}}
 if(S.tab==='sum'){h=l.length?'<div class="row"><button class="b" data-act="sper" data-v="1" aria-pressed="'+((S.per||1)===1)+'">الفترة الأولى</button><button class="b" data-act="sper" data-v="2" aria-pressed="'+(S.per===2)+'">الفترة الثانية</button><button class="b" data-act="sper" data-v="3" aria-pressed="'+(S.per===3)+'">الدرجة النهائية</button><button class="b main" data-act="pdf">PDF</button></div><p class="note">الحضور = (حضر + متأخر + مستأذن) / كل الأيام المسجّلة في الفترة.</p>'+(S.per===3?finHtml(l):[S.per||1].map(function(pn){return '<h3>'+(pn===1?'الفترة الأولى':'الفترة الثانية')+' (من 60)</h3><div class="wrap"><table><tr><th>الطالب</th><th>الحضور</th>'+BN.map(function(b){return '<th>'+b+' ('+CF().bands[b]+')</th>'}).join('')+'<th>المجموع (60)</th></tr>'+l.map(function(s){var row=(s.gr||[]).filter(function(x){return x.pr===pn});return '<tr><td>'+esc(s.name)+'</td><td>'+attc(s,CF().p[pn-1])+'</td>'+BN.map(function(b){var x=row.filter(function(y){return y.b===b})[0];if(!x)return '<td>—</td>';var w=x.w==null?x.s:x.w;return '<td>'+(w<0?'<span style="color:var(--bad)">'+nf(w)+'</span>':nf(x.s))+(x.x>0?' <b style="color:var(--ok)">+'+nf(x.x)+'</b>':'')+(x.u>0?' <small>(+'+nf(x.u)+' فائض)</small>':'')+'</td>'}).join('')+'<td><b>'+nf(pt(s,pn))+'</b></td></tr>'}).join('')+'</table></div>'}).join('')):empty}
 if(S.tab==='st'){h=l.map(function(s,i){return '<div class="r" style="flex-wrap:wrap"><span>'+(i+1)+'. '+esc(s.name)+'<br><span class="code">'+esc(fmt(s.code))+'</span></span><span class="grp"><select class="mvsel" data-id="'+s.id+'" aria-label="نقل إلى شعبة"><option value="">نقل إلى…</option>'+SECS.filter(function(x){return x!==s.sec}).map(function(x){return '<option value="'+x+'">شعبة '+x+'</option>'}).join('')+'</select><button class="b" type="button" data-act="stpdf" data-id="'+s.id+'">PDF</button>'+delBtn('delst',s.id)+'</span></div>'}).join('')||empty}
-if(S.tab==='set'){h='<div class="card">'+CF().cat.map(function(c,i){return '<div class="r"><span><b class="tag '+(c.p<0?'neg':'pos')+'">'+(c.p>0?'+':'')+nf(c.p)+'</b> '+esc(c.n)+' <small>'+esc(c.b)+'</small></span>'+'<span><button class="b" data-act="movecat" data-i="'+i+'" data-v="-1" aria-label="أعلى"'+(i===0?' disabled':'')+'>▲</button><button class="b" data-act="movecat" data-i="'+i+'" data-v="1" aria-label="أسفل"'+(i===CF().cat.length-1?' disabled':'')+'>▼</button> <button class="b" data-act="editcat" data-i="'+i+'">تعديل</button> '+delBtn('delcat','',i)+'</span></div>'}).join('')+'</div><div class="card"><h3>دروس الدفتر</h3><div class="row"><label style="flex:2 1 160px">اسم الدرس<input id="ln" maxlength="60" placeholder="مثال: الدرس الأول — خصائص الموائع"></label><button class="b main" data-act="addles">إضافة الدرس</button></div><h4 class="bh">قائمة الدروس</h4>'+slist('l')+'</div><div class="card"><h3>مهام المنصة</h3><div class="row"><label style="flex:2 1 160px">اسم المهمة<input id="tn" maxlength="60" placeholder="مثال: اختبار المنصة 1"></label><button class="b main" data-act="addtk">إضافة المهمة</button></div><h4 class="bh">قائمة المهام</h4>'+slist('t')+'</div><div class="card"><h3>النسخة الاحتياطية والموقع</h3><p class="note">البيانات محفوظة على خادم موقعك وتظهر للطلاب مباشرة بعد كل رصد. «نسخة احتياطية» ملف تحفظه عندك (فيه رموز الطلاب، فلا ترفعه في أي مكان عام). «مزامنة الموقع» تعيد نشر تقارير كل الطلاب.</p><div class="row"><button class="b" data-act="bkexp">تصدير نسخة احتياطية</button><button class="b" data-act="bkimp">استيراد نسخة</button><button class="b" data-act="syncall">مزامنة الموقع</button><button class="b" data-act="logout">تسجيل الخروج</button><input type="file" id="bkf" accept=".json,application/json" hidden></div></div><div class="card"><h3>إعادة الضبط</h3><p class="note">يرجع الدرجات أو السلوك أو التحضير إلى الوضع الافتراضي (المشاركة 10 والبقية 0). لا يمكن التراجع، فصدّر ملف PDF أو الإكسل قبل ذلك إن احتجت.</p><div class="row"><label>النطاق<select id="rsc"><option value="sec"'+(S.rsc==='sec'?' selected':'')+'>شعبة '+S.sec+' فقط</option><option value="all"'+(S.rsc==='all'?' selected':'')+'>كل الشعب</option></select></label></div><div class="row">'+[['g','إعادة ضبط الدرجات'],['b','إعادة ضبط السلوك'],['a','إعادة ضبط التحضير'],['x','إعادة ضبط الكل']].map(function(q){return '<button class="b del" data-act="rst" data-v="'+q[0]+'">'+(S.pdel==='rst'+q[0]?'اضغط للتأكيد':q[1])+'</button>'}).join('')+'</div><p class="note">الدرجات: دروس الدفتر ومهام المنصة والاختبارات. السلوك: كل السلوكيات. وكلاهما يحذف طلبات الاستفادة من الفائض لأنها مبنية عليهما.</p>'+'</div><div class="card"><h3>إعادة الضبط العام</h3><p class="note">يمسح كل الدرجات والتحضير والسلوك <b>ويحذف أسماء كل الطلاب في كل الشعب</b>. لا يمكن التراجع، ولا ينفّذ إلا بالرقم السري.</p>'+(CF().rp?'<div class="row"><label>الرقم السري<input id="rpin" type="password" inputmode="numeric" autocomplete="off" value="'+esc(S.pv)+'"></label><button class="b del" data-act="gres">'+(S.pdel==='gres'?'اضغط للتأكيد':'إعادة الضبط العام')+'</button></div>':'<div class="row"><label>اختر رقماً سرياً (4 أرقام أو أكثر)<input id="rpin" type="password" inputmode="numeric" autocomplete="off" value="'+esc(S.pv)+'"></label><label>أعد كتابته<input id="rpin2" type="password" inputmode="numeric" autocomplete="off" value="'+esc(S.pv2)+'"></label><button class="b main" data-act="setpin">حفظ الرقم السري</button></div>')+'</div>'}
+if(S.tab==='set'){h='<div class="card">'+CF().cat.map(function(c,i){return '<div class="r"><span><b class="tag '+(c.p<0?'neg':'pos')+'">'+(c.p>0?'+':'')+nf(c.p)+'</b> '+esc(c.n)+' <small>'+esc(c.b)+'</small></span>'+'<span><button class="b" data-act="movecat" data-i="'+i+'" data-v="-1" aria-label="أعلى"'+(i===0?' disabled':'')+'>▲</button><button class="b" data-act="movecat" data-i="'+i+'" data-v="1" aria-label="أسفل"'+(i===CF().cat.length-1?' disabled':'')+'>▼</button> <button class="b" data-act="editcat" data-i="'+i+'">تعديل</button> '+delBtn('delcat','',i)+'</span></div>'}).join('')+'</div><div class="card"><h3>دروس الدفتر</h3><div class="row"><label style="flex:2 1 160px">اسم الدرس<input id="ln" maxlength="60" placeholder="مثال: الدرس الأول — خصائص الموائع"></label><button class="b main" data-act="addles">إضافة الدرس</button></div><h4 class="bh">قائمة الدروس</h4>'+slist('l')+'</div><div class="card"><h3>مهام المنصة</h3><div class="row"><label style="flex:2 1 160px">اسم المهمة<input id="tn" maxlength="60" placeholder="مثال: اختبار المنصة 1"></label><button class="b main" data-act="addtk">إضافة المهمة</button></div><h4 class="bh">قائمة المهام</h4>'+slist('t')+'</div><div class="card"><h3>النسخة الاحتياطية والموقع</h3><p class="note">البيانات محفوظة على خادم موقعك وتظهر للطلاب مباشرة بعد كل رصد. «نسخة احتياطية» ملف تحفظه عندك (فيه رموز الطلاب، فلا ترفعه في أي مكان عام). «مزامنة الموقع» تعيد نشر تقارير كل الطلاب.</p><div class="row"><button class="b" data-act="bkexp">تصدير نسخة احتياطية</button><button class="b" data-act="bkimp">استيراد نسخة</button><button class="b" data-act="syncall">مزامنة الموقع</button><input type="file" id="bkf" accept=".json,application/json" hidden></div></div><div class="card"><h3>إعادة الضبط</h3><p class="note">يرجع الدرجات أو السلوك أو التحضير إلى الوضع الافتراضي (المشاركة 10 والبقية 0). لا يمكن التراجع، فصدّر ملف PDF أو الإكسل قبل ذلك إن احتجت.</p><div class="row"><label>النطاق<select id="rsc"><option value="sec"'+(S.rsc==='sec'?' selected':'')+'>شعبة '+S.sec+' فقط</option><option value="all"'+(S.rsc==='all'?' selected':'')+'>كل الشعب</option></select></label></div><div class="row">'+[['g','إعادة ضبط الدرجات'],['b','إعادة ضبط السلوك'],['a','إعادة ضبط التحضير'],['x','إعادة ضبط الكل']].map(function(q){return '<button class="b del" data-act="rst" data-v="'+q[0]+'">'+(S.pdel==='rst'+q[0]?'اضغط للتأكيد':q[1])+'</button>'}).join('')+'</div><p class="note">الدرجات: دروس الدفتر ومهام المنصة والاختبارات. السلوك: كل السلوكيات. وكلاهما يحذف طلبات الاستفادة من الفائض لأنها مبنية عليهما.</p>'+'</div><div class="card"><h3>إعادة الضبط العام</h3><p class="note">يمسح كل الدرجات والتحضير والسلوك <b>ويحذف أسماء كل الطلاب في كل الشعب</b>. لا يمكن التراجع، ولا ينفّذ إلا بالرقم السري.</p>'+(CF().rp?'<div class="row"><label>الرقم السري<input id="rpin" type="password" inputmode="numeric" autocomplete="off" value="'+esc(S.pv)+'"></label><button class="b del" data-act="gres">'+(S.pdel==='gres'?'اضغط للتأكيد':'إعادة الضبط العام')+'</button></div>':'<div class="row"><label>اختر رقماً سرياً (4 أرقام أو أكثر)<input id="rpin" type="password" inputmode="numeric" autocomplete="off" value="'+esc(S.pv)+'"></label><label>أعد كتابته<input id="rpin2" type="password" inputmode="numeric" autocomplete="off" value="'+esc(S.pv2)+'"></label><button class="b main" data-act="setpin">حفظ الرقم السري</button></div>')+'</div>'}
 ls.innerHTML=h}
 
 /* ---------- Excel ---------- */
@@ -525,7 +568,7 @@ function hexs(u){return Array.from(u).map(function(v){return v.toString(16).padS
 var KEY='';try{KEY=localStorage.getItem('ofq_key')||sessionStorage.getItem('ofq_key')||''}catch(e){}
 function call(method,body){return fetch('/api/db',{method:method,headers:{'content-type':'application/json','x-key':KEY},body:body?JSON.stringify(body):undefined,cache:'no-store'})}
 function loginForm(msg){return new Promise(function(ok){
-$v.innerHTML='<div class="card" style="max-width:420px;margin:40px auto"><h3>لوحة المعلم</h3><label>كلمة السر<input id="lk" type="password" autocomplete="current-password"></label><label style="display:flex;gap:8px;align-items:center;margin-top:8px"><input type="checkbox" id="lr2">تذكرني على هذا الجهاز</label><div class="row"><button class="b main" id="lgo">دخول</button></div><p class="note" id="lmsg" style="color:var(--bad)">'+(msg||'')+'</p></div>';
+$v.innerHTML='<div class="card" style="max-width:420px;margin:40px auto"><h3>لوحة المعلم</h3><label>كلمة السر<input id="lk" type="password" autocomplete="current-password"></label><label style="display:flex;gap:8px;align-items:center;margin-top:8px"><input type="checkbox" id="lr2" style="width:20px;height:20px;margin:0;flex:none;accent-color:var(--acc)"><span>تذكرني</span></label><div class="row"><button class="b main" id="lgo">دخول</button></div><p class="note" id="lmsg" style="color:var(--bad)">'+(msg||'')+'</p></div>';
 function go(){var v=$('lk').value;if(!v)return;KEY=v;var rm=$('lr2').checked;$('lmsg').textContent='جارٍ التحقق...';
 call('GET').then(function(r){if(r.status===200){try{if(rm)localStorage.setItem('ofq_key',KEY);else sessionStorage.setItem('ofq_key',KEY)}catch(e){}r.json().then(ok)}
 else{KEY='';try{localStorage.removeItem('ofq_key');sessionStorage.removeItem('ofq_key')}catch(e){}$('lmsg').textContent=r.status===401?'كلمة السر غير صحيحة.':r.status===429?'محاولات كثيرة، انتظر 10 دقائق.':r.status===503?'الخادم غير مهيأ: أضف المتغير TEACHER_KEY في إعدادات Vercel ثم أعد النشر.':'تعذّر الاتصال، أعد المحاولة.'}}).catch(function(){$('lmsg').textContent='تعذّر الاتصال، أعد المحاولة.'})}
@@ -533,6 +576,8 @@ $('lgo').addEventListener('click',go);$('lk').addEventListener('keydown',functio
 var first=null;
 if(KEY){try{var r0=await call('GET');if(r0.status===200)first=await r0.json()}catch(e){}}
 if(!first)first=await loginForm('');
+(function(){var b=document.createElement('button');b.id='lgout';b.textContent='تسجيل الخروج';b.className='lgout';
+b.onclick=function(){try{localStorage.removeItem('ofq_key');sessionStorage.removeItem('ofq_key')}catch(e){}location.reload()};(document.getElementById('strip')||document.body).appendChild(b)})();
 var ST={},CFG=first.cfg||null;(first.students||[]).forEach(function(z){var o=Object.assign({},z);delete o.id;ST[z.id]=o});
 var colCb=null,cfgCb=null,q=Promise.resolve();
 function enqueue(fn){var p=q.then(fn);q=p.catch(function(){});return p}
