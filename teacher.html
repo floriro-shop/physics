@@ -204,7 +204,8 @@ function mins(t){return +t.slice(0,2)*60+ +t.slice(3)}
 function dstr(d){return new Date(d-d.getTimezoneOffset()*6e4).toISOString().slice(0,10)}
 function hms(sec){sec=Math.max(0,Math.floor(sec));var h=Math.floor(sec/3600),m=Math.floor(sec%3600/60),x=sec%60,z=function(n){return (n<10?'0':'')+n};return (h?h+':':'')+z(m)+':'+z(x)}
 function clk(){var el=document.getElementById('clk');if(!el)return;var tb=document.getElementById('tabs');if(!tb||!tb.children.length){el.hidden=true;return}
-var now=new Date(),ds=dstr(now),nm=now.getHours()*60+now.getMinutes()+now.getSeconds()/60,html='',cur=null,nxt=null,off=0;
+var out=clkHtml();if(el._h!==out){el._h=out;el.innerHTML=out}el.hidden=false}
+function clkHtml(){var now=new Date(),ds=dstr(now),nm=now.getHours()*60+now.getMinutes()+now.getSeconds()/60,html='',cur=null,nxt=null,off=0;
 if(!wk(ds)){var L0=lessonsOn(ds);cur=L0.filter(function(x){return nm>=mins(x.s)&&nm<mins(x.e)})[0]||null;nxt=L0.filter(function(x){return mins(x.s)>nm&&(!cur||x!==cur)})[0]||null}
 if(!nxt){for(off=1;off<=21&&!nxt;off++){var d2=new Date(now.getTime()+off*864e5),ds2=dstr(d2);if(wk(ds2))continue;var l2=lessonsOn(ds2);if(l2.length)nxt={sec:l2[0].sec,p:l2[0].p,s:l2[0].s,e:l2[0].e,day:d2,off:off}}}
 var parts=[];
@@ -212,9 +213,9 @@ if(cur){var all=S.st.filter(function(z){return z.sec===cur.sec}),un=all.filter(f
 parts.push('<div class="ck on"><span>الحصة الحالية: <b>ثالث '+esc(cur.sec)+' — الحصة '+cur.p+'</b></span><span class="ct">تنتهي بعد <b dir="ltr">'+hms(rem)+'</b></span><span class="cu'+(un?' w':'')+'">غير المحضّرين: <b>'+un+'</b> من '+all.length+'</span></div>')}
 if(nxt){var wait,when;if(nxt.off){wait=(new Date(nxt.day.getFullYear(),nxt.day.getMonth(),nxt.day.getDate(),+nxt.s.slice(0,2),+nxt.s.slice(3))-now)/1000;when=nxt.off===1?'غداً':nxt.day.toLocaleDateString('ar-u-ca-gregory-nu-latn',{weekday:'long'})}else{wait=mins(nxt.s)*60-(now.getHours()*3600+now.getMinutes()*60+now.getSeconds());when='اليوم'}
 var d3=Math.floor(wait/86400),w3=wait-d3*86400;
-parts.push('<div class="ck nx"><span>أقرب حصة: <b>ثالث '+esc(nxt.sec)+' — الحصة '+nxt.p+'</b> ('+when+' '+nxt.s+')</span><span class="ct">تبدأ بعد <b dir="ltr">'+(d3?d3+' يوم ':'')+hms(w3)+'</b></span></div>')}
+parts.push('<div class="ck nx"><span>أقرب حصة: <b>ثالث '+esc(nxt.sec)+' — الحصة '+nxt.p+'</b> ('+when+' '+nxt.s+')</span><span class="ct">تبدأ بعد '+(d3?'<b>'+d3+'</b> يوم و ':'')+'<b dir="ltr">'+hms(w3)+'</b></span></div>')}
 if(!parts.length)parts.push('<div class="ck"><span>لا توجد حصص في جدولك. أضفها من الإعدادات.</span></div>');
-var out=parts.join('');if(el._h!==out){el._h=out;el.innerHTML=out}el.hidden=false}
+return parts.join('')}
 setInterval(clk,1000);
 function wkd(d){var g=new Date(d+'T00:00:00Z').getUTCDay();return g===5||g===6}
 function wk(d){return wkd(d)||!!HOL()[d]}
@@ -702,9 +703,10 @@ var rows='<li><span>عدد الطلاب</span><b>'+ids.length+'</b></li>';
 if(off)rows+='<li><span>اليوم</span><b>'+esc(holName(td))+'</b></li>';
 else Object.keys(secs).sort().forEach(function(k){var o=secs[k],left=o.n-o.r;rows+='<li><span>تحضير شعبة '+k+'</span>'+(left?'<b class="warn">باقي '+left+'</b>':'<b>مكتمل</b>')+'</li>'});
 var w=document.createElement('div');w.className='wel';w.setAttribute('role','dialog');w.setAttribute('aria-modal','true');w.setAttribute('aria-label','ترحيب');
-w.innerHTML='<div class="wel-c"><div class="wel-h"><svg viewBox="0 0 40 40" width="44" height="44" aria-hidden="true"><path d="M5 27a15 15 0 0 1 30 0z" fill="#f2a33a"/><path d="M2 27h36" stroke="#9fe3ee" stroke-width="2.4" stroke-linecap="round"/><path d="M9 33h22" stroke="#9fe3ee" stroke-width="2" stroke-linecap="round" opacity=".55"/></svg><h2>'+g+' يا أستاذ أحمد</h2><p>'+ds+'</p></div><div class="wel-b"><ul>'+rows+'</ul><button class="b main" type="button" id="welok">ابدأ</button></div></div>';
+w.innerHTML='<div class="wel-c"><div class="wel-h"><svg viewBox="0 0 40 40" width="44" height="44" aria-hidden="true"><path d="M5 27a15 15 0 0 1 30 0z" fill="#f2a33a"/><path d="M2 27h36" stroke="#9fe3ee" stroke-width="2.4" stroke-linecap="round"/><path d="M9 33h22" stroke="#9fe3ee" stroke-width="2" stroke-linecap="round" opacity=".55"/></svg><h2>'+g+' يا أستاذ أحمد</h2><p>'+ds+'</p></div><div class="wel-b"><div class="clk" id="welclk" style="margin:0 0 12px"></div><ul>'+rows+'</ul><button class="b main" type="button" id="welok">ابدأ</button></div></div>';
 document.body.appendChild(w);
-function cl(){w.remove();document.removeEventListener('keydown',kk)}
+var wc=document.getElementById('welclk'),wt=setInterval(function(){if(!document.body.contains(w)){clearInterval(wt);return}wc.innerHTML=clkHtml()},1000);wc.innerHTML=clkHtml();
+function cl(){clearInterval(wt);w.remove();document.removeEventListener('keydown',kk)}
 function kk(e){if(e.key==='Escape')cl()}
 document.addEventListener('keydown',kk);w.addEventListener('click',function(e){if(e.target===w)cl()});
 var ok=document.getElementById('welok');ok.addEventListener('click',cl);ok.focus();
