@@ -119,6 +119,7 @@ tbody tr:nth-child(even) td{background:rgba(15,40,70,.025)}
 .wel-b .b.main{width:100%;min-height:46px;font-size:1rem}
 @keyframes welIn{from{opacity:0}to{opacity:1}}
 @media(prefers-reduced-motion:reduce){.wel{animation:none}}
+.clk{display:flex;flex-direction:column;gap:6px;margin:10px 0}.clk[hidden]{display:none}.ck{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center;justify-content:space-between;padding:10px 14px;border-radius:14px;border:1px solid var(--line);background:var(--card)}.ck.on{border-color:var(--acc);box-shadow:0 0 0 2px color-mix(in srgb,var(--acc) 25%,transparent)}.ck .ct b{font-variant-numeric:tabular-nums;font-size:1.15rem;color:var(--acc)}.ck.nx .ct b{color:var(--acc2)}.cu b{font-size:1.15rem}.cu.w b{color:var(--bad)}
 </style>
 </head>
 <body>
@@ -129,6 +130,7 @@ tbody tr:nth-child(even) td{background:rgba(15,40,70,.025)}
 </div></header>
 <nav class="strip" id="strip" aria-label="القسم"><div class="bar" id="tabs" role="group" aria-label="القسم"></div></nav>
 <main>
+<div id="clk" class="clk" hidden aria-live="off"></div>
 <p id="msg" role="status" aria-live="polite"></p>
 <div id="view"><p class="note">جارٍ التحميل...</p></div>
 </main>
@@ -179,6 +181,33 @@ function HOL(){var h=(S.cfg||{}).hol;return h&&typeof h==='object'?h:{}}
 function holCard(){var h=HOL(),ks=Object.keys(h).sort(),fm=function(d){return new Date(d+'T00:00:00Z').toLocaleDateString('ar-u-ca-gregory-nu-latn',{weekday:'long',day:'numeric',month:'long',year:'numeric',timeZone:'UTC'})};
 return '<div class="card"><h3>أيام الإجازات</h3><p class="note">اختر تاريخاً (حالياً أو سابقاً أو قادماً) ونوع الإجازة. لا يُسجَّل فيها تحضير ولا تُحتسب فيها درجات، ولا تُحسب على الطلاب في نسبة الحضور (مثل الجمعة والسبت).</p><div class="row"><label style="flex:1 1 150px">التاريخ<input type="date" id="hd" value="'+today()+'"></label><label style="flex:1 1 150px">نوع الإجازة<select id="ht"><option value="اليوم الوطني">اليوم الوطني</option><option value="يوم التأسيس">يوم التأسيس</option><option value="غياب المعلم">غياب المعلم</option><option value="other">أكتبها بنفسي</option></select></label></div><div class="row" id="hnl" style="display:none"><label style="flex:2 1 200px">اسم الإجازة<input id="hn" maxlength="40" placeholder="مثال: إجازة اضطرارية"></label></div><div class="row"><button class="b main" data-act="addhol">إضافة الإجازة</button></div><h4 class="bh">الإجازات المسجّلة</h4>'+(ks.length?ks.map(function(d){return '<div class="r"><span>'+esc(fm(d))+' — <b>'+esc(h[d].t||'')+'</b></span><button class="b del" type="button" data-act="delhol" data-d="'+d+'">حذف</button></div>'}).join(''):'<p class="note">لا توجد إجازات مسجّلة.</p>')+'</div>'}
 document.addEventListener('change',function(e){if(e.target&&e.target.id==='ht'){var r=document.getElementById('hnl');if(r)r.style.display=e.target.value==='other'?'flex':'none'}});
+
+var DAYN=['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس'];
+var DEFSCH={pt:[['07:00','07:45'],['07:50','08:35'],['08:40','09:25'],['09:30','10:15'],['10:35','11:20'],['11:25','12:10'],['12:15','13:00']],tt:{'أ':{0:[5],1:[2],2:[3,5]},'ب':{0:[1],1:[3],2:[1],3:[1,4],4:[5]},'ج':{0:[2,3],1:[4],2:[4],3:[2,3],4:[1,4]}}};
+function TM(v){return /^\d\d:\d\d$/.test(v||'')}
+function SCH(){var c=(S.cfg||{}).sch,d=DEFSCH;if(!c||typeof c!=='object')return d;var pt=Array.isArray(c.pt)&&c.pt.length?c.pt.map(function(x,i){return Array.isArray(x)&&TM(x[0])&&TM(x[1])?[x[0],x[1]]:(d.pt[i]||['07:00','07:45'])}):d.pt;return{pt:pt,tt:(c.tt&&typeof c.tt==='object')?c.tt:d.tt}}
+function schCard(){var c=SCH(),h='<div class="card"><h3>جدول الحصص وأوقاتها</h3><p class="note">يظهر في أعلى اللوحة مؤقّت لبداية أقرب حصة ونهاية الحصة الحالية مع عدد الطلاب غير المحضّرين. عدّل الأوقات والجدول متى شئت ثم اضغط حفظ.</p><h4 class="bh">أوقات الحصص</h4>';
+c.pt.forEach(function(t,i){h+='<div class="row"><b style="flex:0 0 70px;align-self:center">الحصة '+(i+1)+'</b><label style="flex:1 1 110px">من<input type="time" id="sps'+i+'" value="'+t[0]+'"></label><label style="flex:1 1 110px">إلى<input type="time" id="spe'+i+'" value="'+t[1]+'"></label></div>'});
+h+='<h4 class="bh">حصصي في الأسبوع</h4><p class="note">اكتب أرقام الحصص مفصولة بفاصلة، مثل 3,5 — واترك الخانة فارغة إن لم يكن عندك حصة.</p>';
+SECS.forEach(function(sc){h+='<h4 class="bh">ثالث '+esc(sc)+'</h4><div class="row">';DAYN.forEach(function(dn,di){var v=((c.tt[sc]||{})[di]||[]).join(',');h+='<label style="flex:1 1 90px">'+dn+'<input id="stt'+sc+di+'" inputmode="numeric" dir="ltr" value="'+esc(v)+'" placeholder="—"></label>'});h+='</div>'});
+return h+'<div class="row"><button class="b main" data-act="savesch">حفظ الجدول والأوقات</button><button class="b" data-act="defsch">استرجاع الافتراضي</button></div></div>'}
+function lessonsOn(ds){var c=SCH(),o=[],g=new Date(ds+'T00:00:00Z').getUTCDay();if(g>4)return o;SECS.forEach(function(sc){((c.tt[sc]||{})[g]||[]).forEach(function(p){var t=c.pt[p-1];if(t)o.push({sec:sc,p:p,s:t[0],e:t[1]})})});o.sort(function(a,b){return a.s<b.s?-1:a.s>b.s?1:(a.sec<b.sec?-1:1)});return o}
+function mins(t){return +t.slice(0,2)*60+ +t.slice(3)}
+function dstr(d){return new Date(d-d.getTimezoneOffset()*6e4).toISOString().slice(0,10)}
+function hms(sec){sec=Math.max(0,Math.floor(sec));var h=Math.floor(sec/3600),m=Math.floor(sec%3600/60),x=sec%60,z=function(n){return (n<10?'0':'')+n};return (h?h+':':'')+z(m)+':'+z(x)}
+function clk(){var el=document.getElementById('clk');if(!el)return;var tb=document.getElementById('tabs');if(!tb||!tb.children.length){el.hidden=true;return}
+var now=new Date(),ds=dstr(now),nm=now.getHours()*60+now.getMinutes()+now.getSeconds()/60,html='',cur=null,nxt=null,off=0;
+if(!wk(ds)){var L0=lessonsOn(ds);cur=L0.filter(function(x){return nm>=mins(x.s)&&nm<mins(x.e)})[0]||null;nxt=L0.filter(function(x){return mins(x.s)>nm&&(!cur||x!==cur)})[0]||null}
+if(!nxt){for(off=1;off<=21&&!nxt;off++){var d2=new Date(now.getTime()+off*864e5),ds2=dstr(d2);if(wk(ds2))continue;var l2=lessonsOn(ds2);if(l2.length)nxt={sec:l2[0].sec,p:l2[0].p,s:l2[0].s,e:l2[0].e,day:d2,off:off}}}
+var parts=[];
+if(cur){var all=S.st.filter(function(z){return z.sec===cur.sec}),un=all.filter(function(z){return !(z.att||{})[ds]}).length,rem=mins(cur.e)*60-(now.getHours()*3600+now.getMinutes()*60+now.getSeconds());
+parts.push('<div class="ck on"><span>الحصة الحالية: <b>ثالث '+esc(cur.sec)+' — الحصة '+cur.p+'</b></span><span class="ct">تنتهي بعد <b dir="ltr">'+hms(rem)+'</b></span><span class="cu'+(un?' w':'')+'">غير المحضّرين: <b>'+un+'</b> من '+all.length+'</span></div>')}
+if(nxt){var wait,when;if(nxt.off){wait=(new Date(nxt.day.getFullYear(),nxt.day.getMonth(),nxt.day.getDate(),+nxt.s.slice(0,2),+nxt.s.slice(3))-now)/1000;when=nxt.off===1?'غداً':nxt.day.toLocaleDateString('ar-u-ca-gregory-nu-latn',{weekday:'long'})}else{wait=mins(nxt.s)*60-(now.getHours()*3600+now.getMinutes()*60+now.getSeconds());when='اليوم'}
+var d3=Math.floor(wait/86400),w3=wait-d3*86400;
+parts.push('<div class="ck nx"><span>أقرب حصة: <b>ثالث '+esc(nxt.sec)+' — الحصة '+nxt.p+'</b> ('+when+' '+nxt.s+')</span><span class="ct">تبدأ بعد <b dir="ltr">'+(d3?d3+' يوم ':'')+hms(w3)+'</b></span></div>')}
+if(!parts.length)parts.push('<div class="ck"><span>لا توجد حصص في جدولك. أضفها من الإعدادات.</span></div>');
+var out=parts.join('');if(el._h!==out){el._h=out;el.innerHTML=out}el.hidden=false}
+setInterval(clk,1000);
 function wkd(d){var g=new Date(d+'T00:00:00Z').getUTCDay();return g===5||g===6}
 function wk(d){return wkd(d)||!!HOL()[d]}
 function holName(d){var h=HOL()[d];if(h)return 'إجازة ('+(h.t||'إجازة')+')';return wkd(d)?'إجازة أسبوعية':''}
@@ -298,7 +327,7 @@ if(sp!==tp&&!complete(S1.g,sp))return 'درجات الفترة '+PNM[sp]+' لم 
 async function saveRec(s,rec,cf){cf=cf||CF();
 var gr=(s.gr||[]).filter(function(x){return !x.pr}).concat(buildGR(rec,cf,s.att)),beh=(s.beh||[]).filter(function(x){return x.p==null}).concat(buildBeh(rec,cf));
 return safe(col.doc(s.id).update({rec:rec,gr:gr,beh:beh}))}
-async function saveCfg(part){var c=CF(),doc={p1a:c.p[0][0],p1b:c.p[0][1],p2a:c.p[1][0],p2b:c.p[1][1],cat:c.cat,lessons:c.les,tasks:c.tks,rp:c.rp,hol:HOL(),proj:PROJ()};Object.assign(doc,part);
+async function saveCfg(part){var c=CF(),doc={p1a:c.p[0][0],p1b:c.p[0][1],p2a:c.p[1][0],p2b:c.p[1][1],cat:c.cat,lessons:c.les,tasks:c.tks,rp:c.rp,hol:HOL(),proj:PROJ(),sch:SCH()};Object.assign(doc,part);
 if(!await safe(cfgc.doc('main').set(doc)))return false;S.cfg=doc;return true}
 function nk(s){return String(s||'').replace(/[أإآٱ]/g,'ا').replace(/ى/g,'ي').replace(/ة/g,'ه').replace(/[\u064B-\u0652]/g,'')}
 function L(){return S.st.filter(function(s){return s.sec===S.sec}).sort(function(a,b){return nk(a.name).localeCompare(nk(b.name),'ar')||(a.order||0)-(b.order||0)})}
@@ -334,7 +363,7 @@ else f+='<div class="row"><label style="flex:2 1 220px">اسم الاختبار 
 f+='</div>'}
 if(S.tab==='st')f='<div class="card"><label>أضف طلاب ثالث '+S.sec+' (سطر لكل طالب: اسم أول أو رقم)<textarea id="names" rows="4"></textarea></label><div class="row"><button class="b main" data-act="addst">إضافة</button><button class="b" data-act="exp">تصدير رموز الشعبة</button></div><textarea id="cx" rows="6" readonly hidden></textarea></div><p class="note">كل طالب له رمز سري يدخل به على بوابة الطالب. تتحدث البوابة تلقائياً بعد كل رصد خلال فترة قصيرة.</p>';
 if(S.tab==='xl')f='<div class="card"><h3>إكسل</h3><p>الرصد من هنا في الموقع هو الأسهل ويكفيك. إكسل اختياري:</p><ol><li><b>تحميل قالب</b> لإضافة الطلاب دفعة وحدة (الشعبة والاسم).</li><li><b>استيراد</b>: يقبل القالب البسيط، أو ملف <b>afaq-gradebook.xlsx</b> الشامل (يتعرف عليه تلقائياً ويستبدل درجات وحضور وسلوك الطلاب الموجودين فيه ويحتفظ برموزهم).</li><li><b>تصدير</b>: نسخة من كل بياناتك للاحتفاظ بها.</li></ol><div class="row"><button class="b main" data-act="xtpl">تحميل قالب إكسل</button><button class="b main" data-act="ximp">استيراد من إكسل</button><button class="b" data-act="xexp">تصدير إلى إكسل</button></div><input type="file" id="xf" accept=".xlsx,.xls,.csv" hidden></div>';
-if(S.tab==='set')f='<div class="card"><h3>تواريخ الفترتين</h3><div class="row"><label>الفترة الأولى من<input type="date" id="p1a" value="'+cf.p[0][0]+'"></label><label>إلى<input type="date" id="p1b" value="'+cf.p[0][1]+'"></label></div><div class="row"><label>الفترة الثانية من<input type="date" id="p2a" value="'+cf.p[1][0]+'"></label><label>إلى<input type="date" id="p2b" value="'+cf.p[1][1]+'"></label></div><div class="row"><button class="b main" data-act="savep">حفظ التواريخ</button></div><p class="note">أي رصد خارج التاريخين لا يُحتسب في الدرجات. عند الحفظ تُعاد حسبة درجات كل الطلاب. حدود البنود: مشاركة 10، دفتر 10، أوراق عمل 10، منصة 10، اختبار 20 (المجموع 60 للفترة).</p></div>'+holCard()+pjCard()+'<div class="card"><h3>السلوكيات</h3><div class="row"><label style="flex:2 1 160px">اسم السلوك<input id="cn" maxlength="50"></label><label>النقاط (سالبة للسلبي)<input id="cp" type="number" step="0.5"></label><label>البند<select id="cb">'+BN.map(function(b){return '<option>'+b+'</option>'}).join('')+'</select></label><button class="b main" id="cbtn" data-act="addcat">إضافة</button><button class="b" id="ccan" data-act="cancelcat" hidden>إلغاء</button></div><p class="note" id="cnote">السلوك الإيجابي (أخضر) يمكن أن يتبع أي بند ويُستفاد من فائضه، والسلبي (أحمر) يُحسب تحت المشاركة فقط. تعديل سلوك أو حذفه لا يغيّر الرصد القديم المسجل للطلاب، بل يؤثر على الرصد الجديد فقط.</p></div>';
+if(S.tab==='set')f='<div class="card"><h3>تواريخ الفترتين</h3><div class="row"><label>الفترة الأولى من<input type="date" id="p1a" value="'+cf.p[0][0]+'"></label><label>إلى<input type="date" id="p1b" value="'+cf.p[0][1]+'"></label></div><div class="row"><label>الفترة الثانية من<input type="date" id="p2a" value="'+cf.p[1][0]+'"></label><label>إلى<input type="date" id="p2b" value="'+cf.p[1][1]+'"></label></div><div class="row"><button class="b main" data-act="savep">حفظ التواريخ</button></div><p class="note">أي رصد خارج التاريخين لا يُحتسب في الدرجات. عند الحفظ تُعاد حسبة درجات كل الطلاب. حدود البنود: مشاركة 10، دفتر 10، أوراق عمل 10، منصة 10، اختبار 20 (المجموع 60 للفترة).</p></div>'+holCard()+schCard()+pjCard()+'<div class="card"><h3>السلوكيات</h3><div class="row"><label style="flex:2 1 160px">اسم السلوك<input id="cn" maxlength="50"></label><label>النقاط (سالبة للسلبي)<input id="cp" type="number" step="0.5"></label><label>البند<select id="cb">'+BN.map(function(b){return '<option>'+b+'</option>'}).join('')+'</select></label><button class="b main" id="cbtn" data-act="addcat">إضافة</button><button class="b" id="ccan" data-act="cancelcat" hidden>إلغاء</button></div><p class="note" id="cnote">السلوك الإيجابي (أخضر) يمكن أن يتبع أي بند ويُستفاد من فائضه، والسلبي (أحمر) يُحسب تحت المشاركة فقط. تعديل سلوك أو حذفه لا يغيّر الرصد القديم المسجل للطلاب، بل يؤثر على الرصد الجديد فقط.</p></div>';
 if(S.tab==='req')f='<div class="card"><div class="row"><button class="b main" data-act="upull">تحديث الطلبات</button></div><label>سبب الرفض (اختياري، يظهر للطالب عند الضغط على رفض)<input id="rn" maxlength="120"></label><details style="margin-top:10px"><summary>إضافة طلب يدوياً (من رسالة واتساب)</summary><label>الصق الرسالة<textarea id="pm" rows="4"></textarea></label><div class="row"><button class="b" data-act="uimp">إضافة الطلب</button></div></details></div>';
 $('view').innerHTML=f+'<div id="list"></div>';fill()}
 
@@ -576,6 +605,11 @@ if(a==='pjedit'){var px=PROJ().filter(function(x){return x.id===id})[0];if(!px)r
 if(a==='pjcancel'){S.pe=null;build();return}
 if(a==='pjsave'){var pn2=($('pn')?$('pn').value:'').trim().slice(0,60);if(!pn2){say('اكتب الاسم.');return}var pl2=PROJ().map(function(x){return x.id===S.pe?{id:x.id,n:pn2}:x});if(await saveCfg({proj:pl2})){S.pe=null;say('تم تعديل الاسم.',true);build()}return}
 if(a==='delpj'){if(!confirmed('delpj'+id)){build();return}var pl3=PROJ().filter(function(x){return x.id!==id});if(await saveCfg({proj:pl3})){try{await OFQ.subop({o:'subpurge',pid:id})}catch(e){}Object.keys(SUBS).forEach(function(r){delete SUBS[r][id]});say('حُذف النوع وملفاته.',true);build()}return}
+if(a==='savesch'){var npt=[],ok=true,c0=SCH();c0.pt.forEach(function(t,i){var a1=$('sps'+i)?$('sps'+i).value:'',b1=$('spe'+i)?$('spe'+i).value:'';if(!TM(a1)||!TM(b1)||a1>=b1)ok=false;npt.push([a1,b1])});
+if(!ok){say('تحقق من أوقات الحصص: يجب أن تكون النهاية بعد البداية.');return}
+var ntt={};SECS.forEach(function(sc){ntt[sc]={};DAYN.forEach(function(dn,di){var v=($('stt'+sc+di)?$('stt'+sc+di).value:'').split(/[,،\s]+/).map(function(x){return +x}).filter(function(x){return x>=1&&x<=c0.pt.length&&x%1===0});v=v.filter(function(x,i){return v.indexOf(x)===i}).sort(function(a,b){return a-b});if(v.length)ntt[sc][di]=v})});
+if(busy)return;busy=true;if(await saveCfg({sch:{pt:npt,tt:ntt}})){say('حُفظ جدول الحصص وأوقاتها.',true);clk()}busy=false;return}
+if(a==='defsch'){if(!confirmed('defsch'))return;if(busy)return;busy=true;if(await saveCfg({sch:DEFSCH})){say('استُرجع الجدول الافتراضي.',true);build()}busy=false;return}
 if(a==='addhol'){var hd=$('hd')?$('hd').value:'',ht=$('ht')?$('ht').value:'',hn=$('hn')?$('hn').value.trim().slice(0,40):'';if(!hd){say('اختر تاريخ الإجازة.');return}
 var htt=ht==='other'?hn:ht;if(!htt){say('اكتب اسم الإجازة.');return}if(busy)return;busy=true;
 var hh=Object.assign({},HOL());hh[hd]={t:htt};
