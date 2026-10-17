@@ -42,7 +42,7 @@ module.exports = async function (req, res) {
     if (!ok) {
       const fl = await pipe([['GET', fk]]);
       if (Number(fl[0].result || 0) >= 10) return send(res, 429, { error: 'too-many' });
-      await pipe([['INCR', fk], ['EXPIRE', fk, 600]]);
+      await pipe([['SET', fk, 0, 'EX', 600, 'NX'], ['INCR', fk]]);
       return send(res, 401, { error: 'bad-key' });
     }
     if (req.method === 'GET' && /(?:^|[?&])subs=1(?:&|$)/.test(String(req.url || ''))) {

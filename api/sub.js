@@ -32,8 +32,8 @@ module.exports = async function (req, res) {
     if (!URL_() || !TOK_()) return send(res, 503, { error: 'not-configured' });
     const ip = String(req.headers['x-forwarded-for'] || (req.socket && req.socket.remoteAddress) || '').split(',')[0].trim() || 'x';
     const rk = 'ofuq:rls:' + ip;
-    const c = await pipe([['INCR', rk], ['EXPIRE', rk, 60]]);
-    if (Number(c[0].result) > 150) return send(res, 429, { error: 'too-many' });
+    const c = await pipe([['SET', rk, 0, 'EX', 60, 'NX'], ['INCR', rk]]);
+    if (Number(c[1].result) > 150) return send(res, 429, { error: 'too-many' });
     if (req.method === 'GET') {
       const q = new URLSearchParams(String(req.url || '').split('?')[1] || '');
       if (q.get('types')) return send(res, 200, { proj: await projs() });

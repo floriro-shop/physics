@@ -16,8 +16,8 @@ module.exports = async function (req, res) {
     if (!m) return send(res, 400, { error: 'id' });
     const ip = String(req.headers['x-forwarded-for'] || (req.socket && req.socket.remoteAddress) || '').split(',')[0].trim() || 'x';
     const rk = 'ofuq:rl:' + ip;
-    const c = await pipe([['INCR', rk], ['EXPIRE', rk, 60]]);
-    if (Number(c[0].result) > 40) return send(res, 429, { error: 'too-many' });
+    const c = await pipe([['SET', rk, 0, 'EX', 60, 'NX'], ['INCR', rk]]);
+    if (Number(c[1].result) > 40) return send(res, 429, { error: 'too-many' });
     const r = await pipe([['GET', 'ofuq:rep:' + m[1]]]);
     if (!r[0].result) return send(res, 404, { error: 'none' });
     let j; try { j = JSON.parse(r[0].result); } catch (e) { return send(res, 500, { error: 'bad' }); }
