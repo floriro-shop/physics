@@ -68,8 +68,8 @@ body{background:var(--bg)}
 .top{background:linear-gradient(180deg,var(--navy),var(--navy2));color:#eaf2fa;position:relative;padding:max(14px,env(safe-area-inset-top)) 0 16px}
 .top::after{content:"";position:absolute;inset-inline:0;bottom:0;height:3px;background:linear-gradient(90deg,#0f6e86,var(--horizon) 45%,#0f6e86)}
 .top-in{max-width:900px;margin:0 auto;padding:0 16px}
-.brand{display:flex;align-items:center;gap:12px;margin-bottom:12px}
-.top h1{font-size:1.35rem;margin:0;line-height:1.3;color:#fff}
+.brand{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.top h1{font-size:1.8rem;font-weight:700;margin:0;line-height:1.3;color:#fff}
 .top .sub{color:#9db6cf;margin:0;font-size:.85rem}
 #secs{margin:0;gap:0;background:rgba(255,255,255,.09);border-radius:14px;padding:4px;display:grid;grid-template-columns:repeat(3,1fr)}
 #secs .b{background:transparent;color:#cfe0f0;border:0;border-radius:11px;padding:8px 0;text-align:center;font-weight:600;transition:background .15s,color .15s}
@@ -101,12 +101,30 @@ tbody tr:nth-child(even) td{background:rgba(15,40,70,.025)}
 #msg:empty,#secs:empty,.strip:not(:has(button)){display:none}#msg{margin:0 0 8px}
 .lgout{padding:0 10px;font-size:.75rem}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
+
+.top h1 small{display:block;font-size:.95rem;font-weight:500;color:#9db6cf;margin-top:2px}
+.wel{position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(6,14,24,.62);backdrop-filter:blur(3px);animation:welIn .25s ease-out}
+.wel-c{width:100%;max-width:380px;background:var(--card);color:var(--ink);border-radius:22px;overflow:hidden;box-shadow:0 30px 70px -20px rgba(0,0,0,.6)}
+.wel-h{background:linear-gradient(180deg,var(--navy),var(--navy2));padding:22px 20px 18px;color:#fff;position:relative}
+.wel-h::after{content:"";position:absolute;inset-inline:0;bottom:0;height:3px;background:linear-gradient(90deg,#0f6e86,var(--horizon) 45%,#0f6e86)}
+.wel-h svg{display:block;margin-bottom:8px}
+.wel-h h2{margin:0;font-size:1.35rem;line-height:1.4}
+.wel-h p{margin:2px 0 0;color:#9db6cf;font-size:.9rem}
+.wel-b{padding:16px 20px 20px}
+.wel-b ul{list-style:none;margin:0 0 16px;padding:0}
+.wel-b li{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid var(--line)}
+.wel-b li:last-child{border-bottom:0}
+.wel-b li b{color:var(--acc)}
+.wel-b li b.warn{color:var(--warn)}
+.wel-b .b.main{width:100%;min-height:46px;font-size:1rem}
+@keyframes welIn{from{opacity:0}to{opacity:1}}
+@media(prefers-reduced-motion:reduce){.wel{animation:none}}
 </style>
 </head>
 <body>
 <header class="top"><div class="top-in">
 <div class="brand"><svg viewBox="0 0 40 40" width="38" height="38" aria-hidden="true"><path d="M5 27a15 15 0 0 1 30 0z" fill="#f2a33a"/><path d="M2 27h36" stroke="#9fe3ee" stroke-width="2.4" stroke-linecap="round"/><path d="M9 33h22" stroke="#9fe3ee" stroke-width="2" stroke-linecap="round" opacity=".55"/></svg>
-<div><h1>لوحة المعلم</h1><p class="sub">موقع أفق · خاصة بك فقط · تُحفظ تلقائياً</p></div></div>
+<h1>موقع أفق الفيزياء<small id="tname" hidden>أحمد ال ساري</small></h1></div>
 <div class="bar" id="secs" role="group" aria-label="الشعبة"></div>
 </div></header>
 <nav class="strip" id="strip" aria-label="القسم"><div class="bar" id="tabs" role="group" aria-label="القسم"></div></nav>
@@ -568,7 +586,7 @@ function hexs(u){return Array.from(u).map(function(v){return v.toString(16).padS
 var KEY='';try{KEY=localStorage.getItem('ofq_key')||sessionStorage.getItem('ofq_key')||''}catch(e){}
 function call(method,body){return fetch('/api/db',{method:method,headers:{'content-type':'application/json','x-key':KEY},body:body?JSON.stringify(body):undefined,cache:'no-store'})}
 function loginForm(msg){return new Promise(function(ok){
-$v.innerHTML='<div class="card" style="max-width:420px;margin:40px auto"><h3>لوحة المعلم</h3><label>كلمة السر<input id="lk" type="password" autocomplete="current-password"></label><label style="display:flex;gap:8px;align-items:center;margin-top:8px"><input type="checkbox" id="lr2" style="width:20px;height:20px;margin:0;flex:none;accent-color:var(--acc)"><span>تذكرني</span></label><div class="row"><button class="b main" id="lgo">دخول</button></div><p class="note" id="lmsg" style="color:var(--bad)">'+(msg||'')+'</p></div>';
+$v.innerHTML='<div class="card" style="max-width:420px;margin:40px auto"><h3>لوحة المعلم</h3><label>كلمة السر<input id="lk" type="password" autocomplete="current-password"></label><label style="display:flex;gap:8px;align-items:center;justify-content:flex-end;margin-top:8px"><input type="checkbox" id="lr2" style="width:20px;height:20px;margin:0;flex:none;accent-color:var(--acc)"><span>تذكرني</span></label><div class="row"><button class="b main" id="lgo">دخول</button></div><p class="note" id="lmsg" style="color:var(--bad)">'+(msg||'')+'</p></div>';
 function go(){var v=$('lk').value;if(!v)return;KEY=v;var rm=$('lr2').checked;$('lmsg').textContent='جارٍ التحقق...';
 call('GET').then(function(r){if(r.status===200){try{if(rm)localStorage.setItem('ofq_key',KEY);else sessionStorage.setItem('ofq_key',KEY)}catch(e){}r.json().then(ok)}
 else{KEY='';try{localStorage.removeItem('ofq_key');sessionStorage.removeItem('ofq_key')}catch(e){}$('lmsg').textContent=r.status===401?'كلمة السر غير صحيحة.':r.status===429?'محاولات كثيرة، انتظر 10 دقائق.':r.status===503?'الخادم غير مهيأ: أضف المتغير TEACHER_KEY في إعدادات Vercel ثم أعد النشر.':'تعذّر الاتصال، أعد المحاولة.'}}).catch(function(){$('lmsg').textContent='تعذّر الاتصال، أعد المحاولة.'})}
@@ -578,6 +596,26 @@ if(KEY){try{var r0=await call('GET');if(r0.status===200)first=await r0.json()}ca
 if(!first)first=await loginForm('');
 (function(){var b=document.createElement('button');b.id='lgout';b.textContent='تسجيل الخروج';b.className='lgout';
 b.onclick=function(){try{localStorage.removeItem('ofq_key');sessionStorage.removeItem('ofq_key')}catch(e){}location.reload()};(document.getElementById('strip')||document.body).appendChild(b)})();
+setTimeout(function(){try{
+var tn=document.getElementById('tname');if(tn)tn.hidden=false;
+if(sessionStorage.getItem('ofq_wel'))return;sessionStorage.setItem('ofq_wel','1');
+var h=new Date().getHours(),g=h<12?'صباح الخير':h<18?'مساء الخير':'مساء الخير';
+var dt=new Date(),dow=dt.getDay(),off=(dow===5||dow===6);
+var ds=dt.toLocaleDateString('ar-u-ca-gregory-nu-latn',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+var td=today(),ids=Object.keys(ST),secs={};
+ids.forEach(function(id){var z=ST[id],k=z.sec||'';secs[k]=secs[k]||{n:0,r:0};secs[k].n++;if(z.att&&z.att[td])secs[k].r++});
+var rows='<li><span>عدد الطلاب</span><b>'+ids.length+'</b></li>';
+if(off)rows+='<li><span>اليوم</span><b>إجازة</b></li>';
+else Object.keys(secs).sort().forEach(function(k){var o=secs[k],left=o.n-o.r;rows+='<li><span>تحضير شعبة '+k+'</span>'+(left?'<b class="warn">باقي '+left+'</b>':'<b>مكتمل</b>')+'</li>'});
+var w=document.createElement('div');w.className='wel';w.setAttribute('role','dialog');w.setAttribute('aria-modal','true');w.setAttribute('aria-label','ترحيب');
+w.innerHTML='<div class="wel-c"><div class="wel-h"><svg viewBox="0 0 40 40" width="44" height="44" aria-hidden="true"><path d="M5 27a15 15 0 0 1 30 0z" fill="#f2a33a"/><path d="M2 27h36" stroke="#9fe3ee" stroke-width="2.4" stroke-linecap="round"/><path d="M9 33h22" stroke="#9fe3ee" stroke-width="2" stroke-linecap="round" opacity=".55"/></svg><h2>'+g+' يا أستاذ أحمد</h2><p>'+ds+'</p></div><div class="wel-b"><ul>'+rows+'</ul><button class="b main" type="button" id="welok">ابدأ</button></div></div>';
+document.body.appendChild(w);
+function cl(){w.remove();document.removeEventListener('keydown',kk)}
+function kk(e){if(e.key==='Escape')cl()}
+document.addEventListener('keydown',kk);w.addEventListener('click',function(e){if(e.target===w)cl()});
+var ok=document.getElementById('welok');ok.addEventListener('click',cl);ok.focus();
+}catch(e){}},400);
+
 var ST={},CFG=first.cfg||null;(first.students||[]).forEach(function(z){var o=Object.assign({},z);delete o.id;ST[z.id]=o});
 var colCb=null,cfgCb=null,q=Promise.resolve();
 function enqueue(fn){var p=q.then(fn);q=p.catch(function(){});return p}
