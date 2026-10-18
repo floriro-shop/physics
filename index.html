@@ -575,7 +575,7 @@ var pos=r.b.filter(function(x){return x.k==='pos'}).length,neg=r.b.filter(functi
 r.g.forEach(function(x){sa+=+x.s;sm+=+x.m;dt+=Math.max(0,x.m-x.s)});
 var pct=sm?Math.max(0,Math.round(sa/sm*100)):null;
 var top=el('div','dtop'),inf=el('div');
-inf.appendChild(el('h3','ct','أهلاً '+r.n));inf.appendChild(el('p',null,'الصف الثالث الثانوي — شعبة '+r.sec));
+inf.appendChild(el('h3','ct','أهلاً '+r.n));inf.appendChild(el('p',null,r.cn?r.cn:'الصف الثالث الثانوي — شعبة '+r.sec));
 if(upd)inf.appendChild(el('p','dmut','آخر تحديث للبيانات: '+upd));
 inf.appendChild(el('p','dtotal',sm?((r.g.some(function(x){return x.pr})?'درجتك النهائية (معدل الفترتين): '+nf(sa/2)+' من '+nf(sm/2):'مجموع درجاتك: '+nf(sa)+' من '+nf(sm))+(dt>0&&!r.g.some(function(x){return x.pr})?' (خُصم '+nf(dt)+')':'')):'لا توجد درجات مسجلة بعد'));
 top.appendChild(inf);
@@ -645,7 +645,7 @@ var inp=el('input');inp.type='number';inp.step='0.5';inp.min='0.5';inp.placehold
 var bt=el('button','btn2','إرسال الطلب للمعلم');bt.type='button';var ms=el('p','dmut','');
 bt.addEventListener('click',function(){var q=ok[+sl.value],so=ss.options[ss.selectedIndex],v=parseFloat(inp.value),mx=Math.min(q.n,+so.dataset.p);
 if(!(v>0)){inp.focus();return}if(v>mx){alert('أقصى عدد تقدر تطلبه الآن: '+nf(mx));return}
-var t='السلام عليكم أستاذ أحمد\nطلب استفادة من الفائض\nالاسم: '+r.n+'\nالشعبة: '+r.sec+'\nالفترة المطلوبة: '+PN[q.pn].replace('الفترة ','')+'\nمن فائض: '+PN[+so.value].replace('الفترة ','')+'\nالبند: '+q.b+'\nعدد الدرجات: '+nf(v);
+var t='السلام عليكم أستاذ أحمد\nطلب استفادة من الفائض\nالاسم: '+r.n+'\nالشعبة: '+(r.cn||r.sec)+'\nالفترة المطلوبة: '+PN[q.pn].replace('الفترة ','')+'\nمن فائض: '+PN[+so.value].replace('الفترة ','')+'\nالبند: '+q.b+'\nعدد الدرجات: '+nf(v);
 var rid=Date.now().toString(36)+Math.random().toString(36).slice(2,7);t+='\nرقم الطلب: '+rid;bt.disabled=true;ms.textContent='جارٍ الإرسال...';
 fetch('https://ntfy.sh/afaq-4746d4aac8aa7df8ef9c2f6c',{method:'POST',body:t}).then(function(rs){if(!rs.ok)throw 0;ms.textContent='وصل طلبك للمعلم. القرار يظهر لك في «طلباتي» بعد تحديث البيانات.';inp.value=''}).catch(function(){ms.textContent='تعذّر الإرسال المباشر، فتحنا لك الواتساب.';window.open('https://wa.me/966501660897?text='+encodeURIComponent(t),'_blank','noopener')}).then(function(){setTimeout(function(){bt.disabled=false},8000)})});
 o.appendChild(fm);[sl,ss,inp,bt].forEach(function(e){fm.appendChild(e)});o.appendChild(ms)}
