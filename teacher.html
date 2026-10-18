@@ -279,10 +279,13 @@ document.getElementById('rfgo').addEventListener('click',async function(){var g=
 var o={to:document.getElementById('rft').value,date:d,subject:(document.getElementById('rfs').value||r.subject).trim(),why:g('rfw'),act:g('rfa'),other:document.getElementById('rfo').value.trim(),desc:document.getElementById('rfx').value.trim()};cl();
 await htmlPdf(refHtml(z,o),'referral-'+('c'+(SC().indexOf(z.sec)+1))+'-'+ixOf(z)+'-'+d+'.pdf','تم تجهيز نموذج الإحالة.')})}
 
-function exCard(){var cf=CF(),h='<div class="card"><h3>تعليمات الاختبار للطلاب</h3><p class="note">تظهر في بوابة الطالب مع عدّاد الاختبار القادم. يُؤخذ التاريخ من «مواعيد الاختبارات» أعلاه، فحدّده أولاً. اترك أي خانة فارغة إن لم تكن تحتاجها.</p>';
-[0,1].forEach(function(i){var x=cf.exi[i],id=function(k){return 'exi_'+i+'_'+k};
-h+='<h4 class="bh">اختبار الفترة '+(i?'الثانية':'الأولى')+(cf.ex[i]?' — '+esc(cf.ex[i]):' — (لم يُحدَّد التاريخ)')+'</h4><div class="row"><label>وقت البداية<input type="time" id="'+id('tm')+'" value="'+esc(x.tm)+'"></label><label>المدة<input id="'+id('du')+'" maxlength="30" placeholder="مثال: ساعة ونصف" value="'+esc(x.du)+'"></label><label>المكان / القاعة<input id="'+id('rm')+'" maxlength="40" value="'+esc(x.rm)+'"></label></div><div class="row"><label style="flex:1 1 200px">من درس<input id="'+id('fr')+'" maxlength="80" value="'+esc(x.fr)+'"></label><label style="flex:1 1 200px">إلى درس<input id="'+id('to')+'" maxlength="80" value="'+esc(x.to)+'"></label></div><div class="row"><label style="flex:1 1 100%">تعليمات أخرى (كل سطر تعليمة)<textarea id="'+id('nt')+'" rows="4" maxlength="800" style="width:100%">'+esc(x.nt)+'</textarea></label></div>'});
+function exOpts(les,sel,after){var h='<option value="">— اختر الدرس —</option>';les.forEach(function(n,k){if(after>=0&&k<=after)return;h+='<option value="'+esc(n)+'"'+(n===sel?' selected':'')+'>'+esc(n)+'</option>'});return h}
+function exCard(){var cf=CF(),les=cf.les,h='<div class="card"><h3>تعليمات الاختبار للطلاب</h3><p class="note">تظهر في بوابة الطالب مع عدّاد الاختبار القادم. التاريخ يؤخذ من «مواعيد الاختبارات» أعلاه، ووقت البداية والمدة يؤخذان تلقائياً من حصة كل فصل في ذلك اليوم حسب جدول الحصص (يجب أن يكون للفصل حصة في يوم الاختبار).</p>';
+if(!les.length)h+='<p class="note">أضف دروس الدفتر أولاً (في قسم «دروس الدفتر» بالأسفل) لتختار منها.</p>';
+[0,1].forEach(function(i){var x=cf.exi[i],id=function(k){return 'exi_'+i+'_'+k},fi=les.indexOf(x.fr);
+h+='<h4 class="bh">اختبار الفترة '+(i?'الثانية':'الأولى')+(cf.ex[i]?' — '+esc(cf.ex[i]):' — (لم يُحدَّد التاريخ)')+'</h4><div class="row"><label style="flex:1 1 200px">من درس<select class="exfr" data-i="'+i+'" id="'+id('fr')+'">'+exOpts(les,x.fr,-1)+'</select></label><label style="flex:1 1 200px">إلى درس<select id="'+id('to')+'">'+exOpts(les,x.to,fi)+'</select></label></div><div class="row"><label style="flex:1 1 100%">تعليمات أخرى (كل سطر تعليمة)<textarea id="'+id('nt')+'" rows="4" maxlength="800" style="width:100%">'+esc(x.nt)+'</textarea></label></div>'});
 return h+'<div class="row"><button class="b main" data-act="saveexi">حفظ التعليمات ونشرها للطلاب</button></div></div>'}
+document.addEventListener('change',function(e){var t=e.target;if(!t||!t.classList||!t.classList.contains('exfr'))return;var i=t.dataset.i,to=$('exi_'+i+'_to');if(!to)return;var les=CF().les,cur=to.value,fi=les.indexOf(t.value);to.innerHTML=exOpts(les,cur,fi);if(cur&&les.indexOf(cur)<=fi&&fi>=0)to.value=''});
 function clsCard(){var h='<div class="card"><h3>الفصول والمواد</h3><p class="note">افتح فصلاً جديداً، أو عدّل اسم الفصل، أو أضف اسم المادة إذا كنت تدرّس أكثر من مادة (يظهر الاسم والمادة في اللوحة وفي صفحة الطالب). لا يُحذف فصل فيه طلاب: انقلهم أو احذفهم أولاً.</p>';
 CLS().forEach(function(c){var n=S.st.filter(function(z){return z.sec===c.id}).length;h+='<div class="r" style="flex-wrap:wrap;gap:8px"><label style="flex:1 1 140px">اسم الفصل<input id="cn_'+esc(c.id)+'" maxlength="30" value="'+esc(c.n)+'"></label><label style="flex:1 1 120px">المادة (اختياري)<input id="cs_'+esc(c.id)+'" maxlength="30" value="'+esc(c.sub)+'" placeholder="مثال: فيزياء"></label><span style="flex:0 0 100%;display:flex;gap:8px;align-items:center"><span class="note" style="margin:0;flex:1">'+n+' طالب</span><button type="button" class="b main" data-act="clssave" data-id="'+esc(c.id)+'">حفظ</button><button type="button" class="b del" data-act="clsdel" data-id="'+esc(c.id)+'">'+(S.pdel==='clsdel'+c.id?'تأكيد؟':'حذف الفصل')+'</button></span></div>'});
 return h+'<h4 class="bh">فتح فصل جديد</h4><div class="row"><label style="flex:1 1 140px">اسم الفصل<input id="ncn" maxlength="30" placeholder="مثال: ثالث د"></label><label style="flex:1 1 120px">المادة (اختياري)<input id="ncs" maxlength="30" placeholder="مثال: فيزياء"></label></div><div class="row"><button type="button" class="b main" data-act="clsadd">＋ فتح الفصل</button></div></div>'}
@@ -765,7 +768,10 @@ if(a==='delhol'){var dd=b.dataset.d;if(!dd||!HOL()[dd])return;if(!confirmed('del
 var h2=Object.assign({},HOL());delete h2[dd];
 if(await saveCfg({hol:h2})){var cfh2=CF();for(var zh2 of S.st){if(!await saveRec(zh2,zh2.rec||[],cfh2))break}say('حُذفت الإجازة وأُعيد حساب الحضور والدرجات.',true);build()}
 busy=false;return}
-if(a==='saveexi'){if(busy)return;busy=true;var xi=[0,1].map(function(i){var q={};['tm','du','rm','fr','to','nt'].forEach(function(k){var e=$('exi_'+i+'_'+k);q[k]=e?String(e.value||'').trim():''});return q});
+if(a==='saveexi'){var les9=CF().les,bad='';var xi=[0,1].map(function(i){var g=function(k){var e=$('exi_'+i+'_'+k);return e?String(e.value||'').trim():''},q={tm:'',du:'',rm:'',fr:g('fr'),to:g('to'),nt:g('nt')};
+if((q.fr&&!q.to)||(!q.fr&&q.to))bad='اختر «من درس» و«إلى درس» معاً في اختبار الفترة '+(i?'الثانية':'الأولى')+'.';else if(q.fr&&les9.indexOf(q.to)<=les9.indexOf(q.fr))bad='«إلى درس» لازم يكون بعد «من درس» في اختبار الفترة '+(i?'الثانية':'الأولى')+'.';return q});
+if(bad){say(bad);return}
+if(busy)return;busy=true;
 if(await saveCfg({exi:xi})){var cfx=CF(),okc=true;for(var zx of S.st){if(!await saveRec(zx,zx.rec||[],cfx)){okc=false;break}}say(okc?'تم حفظ التعليمات ونشرها لكل الطلاب.':'تم الحفظ لكن تعذّر نشرها لبعض الطلاب، جرّب «مزامنة الموقع».',okc)}
 busy=false;return}
 if(a==='savep'){var vs=['p1a','p1b','p2a','p2b'].map(function(k){return $(k).value}),ex1v=$('ex1')?$('ex1').value:'',ex2v=$('ex2')?$('ex2').value:'',finv=$('fin')?$('fin').value:'';
@@ -860,10 +866,13 @@ async function kd(code){if(kc[code])return kc[code];var km=await crypto.subtle.i
 var bits=new Uint8Array(await crypto.subtle.deriveBits({name:'PBKDF2',salt:SALT,iterations:IT,hash:'SHA-256'},km,384));
 var r={key:await crypto.subtle.importKey('raw',bits.slice(0,32),'AES-GCM',false,['encrypt','decrypt']),id:hexs(bits.slice(32,48))};kc[code]=r;return r}
 function ttPub(sc){var c=SCH(),o=[];for(var g=0;g<5;g++){((c.tt[sc]||{})[g]||[]).slice().sort(function(a,b){return a-b}).forEach(function(p){var t=c.pt[p-1];if(t)o.push({g:g,p:p,s:t[0],e:t[1]})})}return o}
-function exPub(){var cf=CF();return [0,1].map(function(i){var x=cf.exi[i],o={p:i+1,d:cf.ex[i]||''};['tm','du','rm','fr','to','nt'].forEach(function(k){o[k]=x[k]});return o}).filter(function(o){return o.d||o.tm||o.du||o.rm||o.fr||o.to||o.nt})}
+function exPub(sec){var cf=CF();return [0,1].map(function(i){var x=cf.exi[i],d=cf.ex[i]||'',o={p:i+1,d:d,tm:'',du:'',rm:'',fr:x.fr,to:x.to,nt:x.nt};
+if(d){var g=new Date(d+'T00:00:00Z').getUTCDay();if(g<=4){var c=SCH(),ps=((c.tt[sec]||{})[g]||[]).slice().sort(function(a,b){return a-b}),t=null;for(var k=0;k<ps.length&&!t;k++)t=c.pt[ps[k]-1]||null;
+if(t){o.tm=t[0];var m=(+t[1].slice(0,2))*60+(+t[1].slice(3))-(+t[0].slice(0,2))*60-(+t[0].slice(3));if(m>0)o.du=m+' دقيقة'}}}
+return o}).filter(function(o){return o.d||o.fr||o.to||o.nt})}
 async function mkRep(s){var code=String(s.code||'').toUpperCase().replace(/[^A-Z0-9]/g,'');if(!code)return null;var k=await kd(code);
 var att=AT(s),a=[],l=[],e=[],p=0;Object.keys(att).sort().forEach(function(d){if(wk(d))return;if(att[d]==='p')p++;else if(att[d]==='a')a.push(d);else if(att[d]==='l')l.push(d);else if(att[d]==='e')e.push(d)});
-var pl=JSON.stringify({n:s.name,sec:(s.sec.length===1?s.sec:clsN(s.sec)),cn:clsL(s.sec),p:p,a:a,l:l,e:e,b:s.beh||[],g:s.gr||[],x:exPub(),t:ttPub(s.sec)});
+var pl=JSON.stringify({n:s.name,sec:(s.sec.length===1?s.sec:clsN(s.sec)),cn:clsL(s.sec),p:p,a:a,l:l,e:e,b:s.beh||[],g:s.gr||[],x:exPub(s.sec),t:ttPub(s.sec)});
 var iv=crypto.getRandomValues(new Uint8Array(12)),ct=new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv:iv},k.key,new TextEncoder().encode(pl)));
 return{id:k.id,v:{iv:b64e(iv),ct:b64e(ct),upd:today()}}}
 async function pushStudent(id){var s=ST[id];if(!s)return;var rp=await mkRep(s),ops,oldr=s.rid;if(rp)s.rid=rp.id;ops=[{o:'sset',id:id,d:s}];if(rp)ops.push({o:'rset',id:rp.id,v:rp.v});if(rp&&oldr&&oldr!==rp.id)ops.push({o:'rdel',id:oldr});await post(ops)}

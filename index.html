@@ -543,7 +543,7 @@ P.forEach(function(p){var m=S[p.id],r=el('div','subrow'),t=el('span',null,p.n);i
 if(m){var v=el('button','btn2','عرض');v.type='button';v.addEventListener('click',function(){v.disabled=true;subView(p.id,m).catch(function(){ms.textContent='تعذّر فتح الملف.'}).then(function(){v.disabled=false})});r.appendChild(v)}box.appendChild(r)})}
 Promise.all([jget('/api/sub?types=1'),jget('/api/sub?rid='+SESS.rid)]).then(function(r){render(r[0],r[1])}).catch(function(){box.innerHTML='';box.appendChild(el('p','dmut','تعذّر تحميل التسليمات الآن.'))})}
 function exInfo(r){var X=(r.x||[]).filter(function(x){return x&&(x.d||x.tm||x.du||x.rm||x.fr||x.to||x.nt)});if(!X.length)return null;
-var wr=el('div'),now=new Date(),td=now.getFullYear()+'-'+('0'+(now.getMonth()+1)).slice(-2)+'-'+('0'+now.getDate()).slice(-2);
+var f12=function(x){if(!x)return '';var h=+x.slice(0,2);return (h>12?h-12:h)+':'+x.slice(3)},wr=el('div'),now=new Date(),td=now.getFullYear()+'-'+('0'+(now.getMonth()+1)).slice(-2)+'-'+('0'+now.getDate()).slice(-2);
 var tgt=function(x){return new Date(x.d+'T'+(x.tm||'00:00')+':00')};
 var nx=X.filter(function(x){return x.d&&x.d>=td}).sort(function(a,b){return a.d<b.d?-1:1})[0];
 var PNx=function(x){return 'اختبار الفترة '+(x.p===2?'الثانية':'الأولى')};
@@ -552,12 +552,12 @@ var first=true,tick=function(){if(!first&&!document.body.contains(cd)){clearInte
 if(ms<=0){ck.textContent=nx.d===td?'الاختبار اليوم':'—';sb.textContent=nx.d===td?'بالتوفيق!':'';return}
 var d=Math.floor(ms/864e5),h=Math.floor(ms%864e5/36e5),m=Math.floor(ms%36e5/6e4);
 ck.textContent=d>0?d+' يوم '+h+' ساعة':(h>0?h+' ساعة '+m+' دقيقة':m+' دقيقة');
-sb.textContent=nx.d+(nx.tm?' · '+nx.tm:'')+(nx.rm?' · '+nx.rm:'')};
+sb.textContent=nx.d+(nx.tm?' · '+f12(nx.tm):'')};
 var iv=setInterval(tick,30000);tick();wr.appendChild(cd)}else if(X.some(function(x){return !x.d})){var cd2=el('div','exc');cd2.appendChild(el('div','exl','الاختبار القادم'));cd2.appendChild(el('div','exk','استعد للاختبار القادم 💪'));cd2.appendChild(el('div','exl','سيُعلن الموعد قريباً، اطّلع على التعليمات بالأسفل وابدأ المراجعة.'));wr.appendChild(cd2)}
 var det=el('details','dpd'),sm=el('summary','dph');sm.appendChild(el('b',null,'تعليمات الاختبار'));det.appendChild(sm);
 X.slice().sort(function(a,b){return a.p-b.p}).forEach(function(x){var b=el('div','exb');b.appendChild(el('h4',null,PNx(x)));
 var row=function(t,v){if(v){var p=el('p');p.appendChild(el('b',null,t+': '));p.appendChild(document.createTextNode(v));b.appendChild(p)}};
-row('التاريخ',x.d);row('الوقت',x.tm);row('المدة',x.du);row('المكان',x.rm);row('من درس',x.fr);row('إلى درس',x.to);
+row('التاريخ',x.d);row('الوقت',f12(x.tm));row('المدة',x.du);row('من درس',x.fr);row('إلى درس',x.to);
 if(x.nt){var n=el('p','exnt');n.appendChild(el('b',null,'تعليمات: '));n.appendChild(document.createTextNode('\n'+x.nt));b.appendChild(n)}
 det.appendChild(b)});wr.appendChild(det);return wr}
 function wsPanel(){var d=el('details','dpd'),sm=el('summary','dph');sm.appendChild(el('b',null,'ملفات للتحميل'));d.appendChild(sm);var ul=el('ul');ul.style.cssText='list-style:none;padding:8px 14px;margin:0 0 10px;border:1px solid var(--line);border-radius:12px;background:var(--card)';d.appendChild(ul);if(window.wsBuild)window.wsBuild(ul);return d}
