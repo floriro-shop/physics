@@ -94,6 +94,20 @@ section{scroll-margin-top:16px}
 .pdfi{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;width:42px;height:48px;border-radius:6px 14px 6px 6px;background:linear-gradient(160deg,#ef5350,#c62828);color:#fff;font-size:.78rem;font-weight:800;letter-spacing:.5px;position:relative;box-shadow:0 2px 6px rgba(198,40,40,.35)}
 .pdfi::before{content:'';position:absolute;top:0;inset-inline-start:0;width:12px;height:12px;background:rgba(255,255,255,.35);border-bottom-right-radius:6px}
 .wsn{flex:1;line-height:1.5}.wsd{flex:0 0 auto;color:var(--acc);font-size:1.1rem}
+.ntf{border:2px solid var(--acc);border-radius:14px;padding:12px 16px;margin:14px 0 6px;background:var(--card)}
+.ntf h4{margin:0 0 6px;color:var(--ink);font-size:1.05rem}.ntf ul{margin:0;padding:0 18px 0 0}.ntf li{margin:3px 0;color:var(--ink);font-weight:600}.ntf li.bad{color:var(--bad)}.ntf li.good{color:var(--ok)}
+.ntf button{margin-top:8px}
+.tev{border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:var(--card);margin:0 0 10px}
+.tev .tl{display:flex;flex-wrap:wrap;gap:6px 18px;margin:0 0 10px;color:var(--ink);font-weight:600}.tev .tl i{display:inline-block;width:14px;height:14px;border-radius:4px;vertical-align:-2px;margin-inline-end:6px}
+.tev .tt{font-weight:800;color:var(--ink);margin:0 0 10px;font-size:1.05rem}
+.tev .tn{display:flex;justify-content:space-between;align-items:center;margin:12px 0 4px;font-weight:800;color:var(--ink)}
+.tev .dl{font-size:.9rem;font-weight:800}.tev .dl.up{color:var(--ok)}.tev .dl.dn{color:var(--bad)}.tev .dl.eq{color:var(--mute)}
+.tev .tr{display:grid;grid-template-columns:54px 1fr 84px;align-items:center;gap:8px;margin:3px 0}
+.tev .tr span.pl{color:var(--mute);font-size:.85rem;font-weight:600}.tev .tr span.tv{color:var(--ink);font-weight:700;font-size:.9rem;text-align:start}
+.tev .bar{height:12px;border-radius:6px;background:var(--line);overflow:hidden}.tev .bar b{display:block;height:100%;border-radius:6px}
+.tev .b1{background:#6f849d}.tev .b2{background:var(--acc)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]) .tev .b1{background:#8fa8c3}}
+:root[data-theme="dark"] .tev .b1{background:#8fa8c3}
 .exb{margin:0 0 10px;padding:8px 14px 12px;border:1px solid var(--line);border-radius:12px;background:var(--card)}
 .exb h4{margin:10px 0 4px;color:var(--ink)}.exb p{margin:3px 0;color:var(--ink)}.exb .exnt{white-space:pre-wrap;margin-top:6px}
 
@@ -571,6 +585,22 @@ if(!T.length){b.appendChild(el('p','dmut','لم تُضف مواعيد حصصك �
 else{var DN=['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس'],tf=function(x){var h=+x.slice(0,2),m=x.slice(3);return (h>12?h-12:h)+':'+m};
 DN.forEach(function(n,g){var L=T.filter(function(x){return x.g===g});if(!L.length)return;var p=el('p');p.appendChild(el('b',null,n+': '));p.appendChild(document.createTextNode(L.map(function(x){return 'الحصة '+x.p+' ('+tf(x.s)+' – '+tf(x.e)+')'}).join('، ')));b.appendChild(p)})}
 d.appendChild(b);return d}
+function ntfBox(r){var td=new Date(),t0=td.getFullYear()+'-'+('0'+(td.getMonth()+1)).slice(-2)+'-'+('0'+td.getDate()).slice(-2),key='ofq_seen_'+(SESS&&SESS.rid),prev=null,ok=true;
+try{prev=JSON.parse(localStorage.getItem(key)||'null')}catch(e){ok=false}
+var dn=function(d){var w='';try{w=new Date(d+'T12:00:00Z').toLocaleDateString('ar',{weekday:'long',timeZone:'UTC'})}catch(e){}return w+' '+d};
+var A=r.a||[],L=r.l||[],E=r.e||[],B=r.b||[],G=r.g||[],bk=function(x){return (x.d||'')+'|'+(x.n||'')+'|'+(x.p==null?'':x.p)};
+var gm={};G.forEach(function(x){gm[(x.pr||0)+'|'+x.b]=+x.s});
+var snap={a:A,l:L,e:E,b:B.map(bk),g:gm},items=[],P={1:'الأولى',2:'الثانية'};
+var seen=function(arr,v){return prev&&(prev[arr]||[]).indexOf(v)>=0};
+A.forEach(function(d){if(d===t0)items.push(['bad','غبت اليوم ('+dn(d)+')']);else if(prev&&!seen('a',d))items.push(['bad','سُجّل عليك غياب يوم '+dn(d)])});
+L.forEach(function(d){if(d===t0)items.push(['bad','تأخرت اليوم ('+dn(d)+')']);else if(prev&&!seen('l',d))items.push(['bad','سُجّل عليك تأخر يوم '+dn(d)])});
+E.forEach(function(d){if(prev&&!seen('e',d))items.push(['','سُجّل لك استئذان يوم '+dn(d)])});
+if(prev)B.forEach(function(x){if((prev.b||[]).indexOf(bk(x))>=0)return;var pos=x.k==='pos',use=x.k==='use';items.push([use?'':(pos?'good':'bad'),(use?'تحديث في طلبك: ':(pos?'سلوك إيجابي: ':'ملاحظة سلوك: '))+(x.n||'')+(x.p!=null&&!use?' ('+(x.p>0?'+':'')+x.p+')':'')])});
+if(prev)G.forEach(function(x){var k=(x.pr||0)+'|'+x.b,o=(prev.g||{})[k];if(o===undefined?(+x.s>0):(+x.s!==o))items.push([+x.s>=(o||0)?'good':'bad','سُجّلت لك درجة جديدة في '+x.b+(x.pr?' (الفترة '+P[x.pr]+')':'')+': '+nf(+x.s)+' من '+nf(+x.m)])});
+if(ok)try{localStorage.setItem(key,JSON.stringify(snap))}catch(e){}
+if(!items.length)return null;var uniq=[],sk={};items.forEach(function(i){if(!sk[i[1]]){sk[i[1]]=1;uniq.push(i)}});
+var b=el('div','ntf');b.setAttribute('role','status');b.appendChild(el('h4',null,'🔔 جديد لك'));var ul=el('ul');uniq.slice(0,8).forEach(function(i){ul.appendChild(el('li',i[0],i[1]))});if(uniq.length>8)ul.appendChild(el('li',null,'و'+(uniq.length-8)+' تحديثات أخرى…'));b.appendChild(ul);
+var x=el('button','btn2','حسناً');x.type='button';x.addEventListener('click',function(){b.remove()});b.appendChild(x);return b}
 function show(r,upd){var ov=$('pov');ov.innerHTML='';ov.hidden=false;document.body.style.overflow='hidden';
 var bar=el('div','povbar');bar.appendChild(el('b',null,'موقع أفق · لوحة الطالب'));var pb=el('button','btn2','PDF');pb.type='button';pb.addEventListener('click',function(){window.print()});var bx=el('div');bx.style.cssText='display:flex;gap:8px';bx.appendChild(pb);var cb=el('button','btn2','خروج');cb.type='button';cb.addEventListener('click',closeP);bx.appendChild(cb);bar.appendChild(bx);ov.appendChild(bar);
 var o=el('div','in');ov.appendChild(o);
@@ -586,7 +616,7 @@ var C=2*Math.PI*44,rg=sv('svg',{viewBox:'0 0 120 120','class':'dring',role:'img'
 rg.appendChild(sv('circle',{cx:60,cy:60,r:44,fill:'none',stroke:'var(--line)','stroke-width':10}));
 rg.appendChild(sv('circle',{cx:60,cy:60,r:44,fill:'none',stroke:'var(--acc)','stroke-width':10,'stroke-linecap':'round','stroke-dasharray':(pct==null?0:C*pct/100)+' '+C,transform:'rotate(-90 60 60)'}));
 rg.appendChild(sv('text',{x:60,y:68,'text-anchor':'middle'},pct==null?'—':pct+'%'));
-top.appendChild(rg);o.appendChild(top);var exw=exInfo(r);if(exw)o.appendChild(exw);o.appendChild(ttPanel(r));o.appendChild(wsPanel());
+top.appendChild(rg);o.appendChild(top);var ntw=ntfBox(r);if(ntw)o.appendChild(ntw);var exw=exInfo(r);if(exw)o.appendChild(exw);o.appendChild(ttPanel(r));o.appendChild(wsPanel());
 var T=el('div','tiles');
 [['حضور',r.p],['غياب',r.a.length],['تأخر',r.l.length],['مستأذن',(r.e||[]).length],['سلوك إيجابي',pos],['سلوك سلبي',neg]].forEach(function(x){var d=el('div','tile',x[0]);d.appendChild(el('b',null,x[1]));T.appendChild(d)});
 o.appendChild(T);
@@ -634,6 +664,15 @@ dw.appendChild(dl2);det.appendChild(dw);
 gs.forEach(function(x){det.appendChild(gcard(x,x.b||x.t))})});
 r.g.filter(function(x){return !x.pr}).forEach(function(x){o.appendChild(gcard(x,x.t))});
 var UR=r.b.filter(function(x){return x.k==='use'}),PS={};[1,2].forEach(function(pn){var gs=r.g.filter(function(x){return x.pr===pn}),sx=0;gs.forEach(function(x){sx+=+x.x||0});PS[pn]={gs:gs,tot:sx,pool:Math.max(0,Math.round((sx-(gs.length?(+gs[0].uo||0):0))*100)/100),done:gs.length>0&&gs.every(function(x){return x.m-(x.w==null?x.s:x.w)-(x.u||0)<=1e-9})}});
+(function(){var g1={},g2={},h1=false,h2=false;r.g.forEach(function(x){if(x.pr===1){g1[x.b]=x;if(x.ev&&x.ev.length)h1=true}else if(x.pr===2){g2[x.b]=x;if(x.ev&&x.ev.length)h2=true}});if(!(h1&&h2))return;
+var BN5=['مشاركة','دفتر','أوراق عمل','منصة','اختبار'].filter(function(b){return g1[b]&&g2[b]}),t1=0,t2=0;BN5.forEach(function(b){t1+=+g1[b].s;t2+=+g2[b].s});
+var dl=function(a,b){var d=Math.round((b-a)*100)/100;return el('span','dl '+(d>0?'up':(d<0?'dn':'eq')),d>0?'▲ +'+nf(d):(d<0?'▼ '+nf(d):'= ثابت'))};
+sec(o,'تطوّري بين الفترتين');var bx=el('div','tev');
+var lg=el('div','tl');[['b1','الفترة الأولى'],['b2','الفترة الثانية']].forEach(function(z){var s1=el('span');var i=el('i');i.className=z[0];s1.appendChild(i);s1.appendChild(document.createTextNode(z[1]));lg.appendChild(s1)});bx.appendChild(lg);
+var hd=el('div','tn');hd.appendChild(el('span',null,'المجموع: '+nf(t1)+' ← '+nf(t2)));hd.appendChild(dl(t1,t2));bx.appendChild(hd);
+BN5.forEach(function(b){var a=g1[b],c=g2[b],m=+a.m||1,n=el('div','tn');n.appendChild(el('span',null,b));n.appendChild(dl(+a.s,+c.s));bx.appendChild(n);
+[[a,'b1','الأولى'],[c,'b2','الثانية']].forEach(function(z){var rw=el('div','tr'),pl=el('span','pl',z[2]),br=el('div','bar'),fl=el('b'),w=Math.max(0,Math.min(100,(+z[0].s)/m*100));fl.className=z[1];fl.style.width=w+'%';br.appendChild(fl);br.setAttribute('title',b+' — الفترة '+z[2]+': '+nf(+z[0].s)+' من '+nf(m));br.setAttribute('role','img');br.setAttribute('aria-label',b+' الفترة '+z[2]+': '+nf(+z[0].s)+' من '+nf(m));rw.appendChild(pl);rw.appendChild(br);rw.appendChild(el('span','tv',nf(+z[0].s)+' من '+nf(m)));bx.appendChild(rw)})});
+o.appendChild(bx)})();
 if(PS[1].tot>0||PS[2].tot>0||UR.length){sec(o,'فائض الدرجات');
 o.appendChild(el('p',null,'إذا زادت درجتك في بند عن حدّه يتجمع الفائض. تقدر تطلب الاستفادة منه لتعويض بند ناقص، والمعلم يقبل أو يرفض. فائض أي فترة يُستفاد منه في الفترة الأخرى بشرط أن تكون درجات الفترة التي فيها الفائض مكتملة.'));
 [1,2].forEach(function(pn){if(PS[pn].gs.length)o.appendChild(el('p','dmut',PN[pn]+': الفائض المتاح '+nf(PS[pn].pool)+(PS[pn].pool>0&&!PS[pn].done?' (يُستفاد منه داخل نفس الفترة فقط حتى تكتمل درجاتها)':'')))});
