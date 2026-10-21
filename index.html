@@ -561,7 +561,7 @@ box.appendChild(el('p','dmut','PDF أو صورة، حتى 3 ميغا. التسل
 P.forEach(function(p){var m=S[p.id],r=el('div','subrow'),t=el('span',null,p.n);if(m){t.appendChild(el('small','dmut',' · سُلّم '+String(m.upd).slice(0,10)+' · '+szt(m.size)))}else t.appendChild(el('small','dmut',' · لم يُسلَّم'));r.appendChild(t);
 if(m){var v=el('button','btn2','عرض');v.type='button';v.addEventListener('click',function(){v.disabled=true;subView(p.id,m).catch(function(){ms.textContent='تعذّر فتح الملف.'}).then(function(){v.disabled=false})});r.appendChild(v)}box.appendChild(r)})}
 Promise.all([jget('/api/sub?types=1'),jget('/api/sub?rid='+SESS.rid)]).then(function(r){render(r[0],r[1])}).catch(function(){box.innerHTML='';box.appendChild(el('p','dmut','تعذّر تحميل التسليمات الآن.'))})}
-function exInfo(r){var X=(r.x||[]).filter(function(x){return x&&(x.d||x.tm||x.du||x.rm||x.fr||x.to||x.nt)});if(!X.length)return null;
+function exInfo(r){var X=(r.x||[]).filter(function(x){if(!(x&&(x.d||x.tm||x.du||x.rm||x.fr||x.to||x.nt)))return false;if(x.d){var n=new Date(),t0=n.getFullYear()+'-'+('0'+(n.getMonth()+1)).slice(-2)+'-'+('0'+n.getDate()).slice(-2),hm=('0'+n.getHours()).slice(-2)+':'+('0'+n.getMinutes()).slice(-2);if(x.d<t0||(x.d===t0&&x.te&&hm>x.te))return false}return true});if(!X.length)return null;
 var f12=function(x){if(!x)return '';var h=+x.slice(0,2);return (h>12?h-12:h)+':'+x.slice(3)+(h<12?' ص':' م')},wr=el('div'),now=new Date(),td=now.getFullYear()+'-'+('0'+(now.getMonth()+1)).slice(-2)+'-'+('0'+now.getDate()).slice(-2);
 var tgt=function(x){return new Date(x.d+'T'+(x.tm||'00:00')+':00')};
 var nx=X.filter(function(x){return x.d&&x.d>=td}).sort(function(a,b){return a.d<b.d?-1:1})[0];
