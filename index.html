@@ -180,6 +180,7 @@ section{scroll-margin-top:16px}
 .subbox select,.subbox input[type=file]{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink);font:inherit}
 .subrow{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 2px;border-bottom:1px solid var(--line)}
 .subrow .btn2{margin:0}
+.ach{margin:0 0 12px}.achi{margin:0 0 8px;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:var(--card)}.achi.me{border-color:var(--acc2);box-shadow:0 0 0 2px color-mix(in srgb,var(--acc2) 30%,transparent)}.acht{display:flex;align-items:center;gap:8px}.achc{font-size:22px}.achp{margin:6px 0 0;line-height:1.7}.achm{margin:6px 0 0;font-weight:700;color:var(--acc2)}
 </style>
 </head>
 <body>
@@ -579,6 +580,11 @@ var row=function(t,v){if(v){var p=el('p');p.appendChild(el('b',null,t+': '));p.a
 row('التاريخ',x.d);row('الحصة',x.pn?(['','الأولى','الثانية','الثالثة','الرابعة','الخامسة','السادسة','السابعة','الثامنة','التاسعة','العاشرة'][x.pn]||x.pn):'');row('الوقت',x.tm?'من الساعة '+f12(x.tm)+(x.te?' إلى '+f12(x.te):''):'');row('المدة',x.du);row('من درس',x.fr);row('إلى درس',x.to);
 if(x.nt){var n=el('p','exnt');n.appendChild(el('b',null,'تعليمات: '));n.appendChild(document.createTextNode('\n'+x.nt));b.appendChild(n)}
 det.appendChild(b)});wr.appendChild(det);return wr}
+function achPanel(r){var V=r.v;if(!V||!V.i||!V.i.length)return null;var PN={1:'الأولى',2:'الثانية'},w=el('div','ach');w.appendChild(el('h3','ct','🏆 إنجازات الطلاب'));
+var ICO={att:'🌟',ex:'🥇',tot:'🏆'},join=function(a){return a.length>1?'الطلاب '+a.join(' و'):'الطالب '+a[0]},jl=function(a){return a.length>1?'للطلاب '+a.join(' و'):'للطالب '+a[0]};
+V.i.forEach(function(x){if(!x||!x.n||!x.n.length)return;var mine=x.n.indexOf(r.n)>=0,c=el('div','achi'+(mine?' me':'')),t,tx,pl;
+if(x.k==='att'){t='الأكثر حضوراً للحصص';pl=x.n.length>1;tx='نشكر '+join(x.n)+' على '+(pl?'التزامهم وحرصهم':'التزامه وحرصه')+' على حضور الحصص'}else if(x.k==='ex'){t='الأعلى درجة في الاختبار'+(x.p?' — الفترة '+PN[x.p]:'');pl=x.n.length>1;tx='نبارك '+jl(x.n)+' '+(pl?'تحقيقهم':'تحقيقه')+' أعلى درجة في الاختبار'}else{t='الأعلى درجة في الفترة'+(x.p?' '+PN[x.p]:'')+' كاملة';pl=x.n.length>1;tx='نبارك '+jl(x.n)+' '+(pl?'تفوقهم وحصولهم':'تفوقه وحصوله')+' على أعلى مجموع درجات في الفترة'}
+var h=el('div','acht');h.appendChild(el('span','achc',ICO[x.k]||'⭐'));h.appendChild(el('b',null,t));c.appendChild(h);c.appendChild(el('p','achp',tx+(x.v?' ('+x.v+')':'')+' 👏'));if(mine)c.appendChild(el('p','achm','🎉 مبروك، أنت من المتميزين!'));w.appendChild(c)});return w}
 function wsPanel(){var d=el('details','dpd'),sm=el('summary','dph');sm.appendChild(el('b',null,'ملفات للتحميل'));d.appendChild(sm);var ul=el('ul');ul.style.cssText='list-style:none;padding:8px 14px;margin:0 0 10px;border:1px solid var(--line);border-radius:12px;background:var(--card)';d.appendChild(ul);if(window.wsBuild)window.wsBuild(ul);return d}
 function ttPanel(r){var T=(r.t||[]);var d=el('details','dpd'),sm=el('summary','dph');sm.appendChild(el('b',null,'مواعيد حصصك'));d.appendChild(sm);var b=el('div','exb');
 if(!T.length){b.appendChild(el('p','dmut','لم تُضف مواعيد حصصك بعد.'))}
@@ -616,7 +622,7 @@ var C=2*Math.PI*44,rg=sv('svg',{viewBox:'0 0 120 120','class':'dring',role:'img'
 rg.appendChild(sv('circle',{cx:60,cy:60,r:44,fill:'none',stroke:'var(--line)','stroke-width':10}));
 rg.appendChild(sv('circle',{cx:60,cy:60,r:44,fill:'none',stroke:'var(--acc)','stroke-width':10,'stroke-linecap':'round','stroke-dasharray':(pct==null?0:C*pct/100)+' '+C,transform:'rotate(-90 60 60)'}));
 rg.appendChild(sv('text',{x:60,y:68,'text-anchor':'middle'},pct==null?'—':pct+'%'));
-top.appendChild(rg);o.appendChild(top);var ntw=ntfBox(r);if(ntw)o.appendChild(ntw);var exw=exInfo(r);if(exw)o.appendChild(exw);o.appendChild(ttPanel(r));o.appendChild(wsPanel());
+top.appendChild(rg);o.appendChild(top);var ntw=ntfBox(r);if(ntw)o.appendChild(ntw);var exw=exInfo(r);if(exw)o.appendChild(exw);var acw=achPanel(r);if(acw)o.appendChild(acw);o.appendChild(ttPanel(r));o.appendChild(wsPanel());
 var T=el('div','tiles');
 [['حضور',r.p],['غياب',r.a.length],['تأخر',r.l.length],['مستأذن',(r.e||[]).length],['سلوك إيجابي',pos],['سلوك سلبي',neg]].forEach(function(x){var d=el('div','tile',x[0]);d.appendChild(el('b',null,x[1]));T.appendChild(d)});
 o.appendChild(T);
