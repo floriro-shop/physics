@@ -753,7 +753,7 @@ var PN={1:'الأولى',2:'الثانية'},IC={att:'🌟',ex:'🥇',tot:'🏆'
 var mk=function(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e};
 var bn=mk('div','hofb');bn.appendChild(mk('div','hofbe','🎉'));bn.appendChild(mk('div','hofbt','مبروك لنجوم الفيزياء!'));bn.appendChild(mk('div','hofbs','نفخر بكم، وبإذن الله القادم أجمل ✨'));g.appendChild(bn);
 A.c.forEach(function(c){var d=mk('div','hofc');d.appendChild(mk('div','hofh','🏅 '+c.n));var gr=mk('div','hofg');
-var ORD={att:0,tot:1,ex:2};(c.i||[]).slice().sort(function(a,b){return (ORD[a.k]||0)-(ORD[b.k]||0)}).forEach(function(x){if(!x||!x.n||!x.n.length)return;var t=mk('div','hofi k-'+x.k);var bd=mk('div','hofbd',IC[x.k]||'⭐');t.appendChild(bd);t.appendChild(mk('div','hofm',MS[x.k]||''));t.appendChild(mk('div','hoft',(TT[x.k]||'')+(x.p&&x.k!=='att'?' — الفترة '+PN[x.p]:'')));
+var ORD={att:0,tot:1,ex:2};(c.i||[]).slice().sort(function(a,b){return (ORD[a.k]||0)-(ORD[b.k]||0)}).forEach(function(x){if(!x||!x.n||!x.n.length)return;var t=mk('div','hofi k-'+x.k);var bd=mk('div','hofbd',IC[x.k]||'⭐');t.appendChild(bd);t.appendChild(mk('div','hofm',MS[x.k]||''));t.appendChild(mk('div','hoft',(TT[x.k]||'')+(x.p?' — الفترة '+PN[x.p]:'')));
 var nm=mk('div','hofn');x.n.forEach(function(n){nm.appendChild(mk('span','hofp','⭐ '+n))});t.appendChild(nm);if(x.v)t.appendChild(mk('div','hofv',x.v));gr.appendChild(t)});d.appendChild(gr);g.appendChild(d)})}).catch(function(){});
 fetch('/api/visits'+(hit?'?hit=1':'')).then(function(r){return r.ok?r.json():null}).then(function(j){if(!j||j.count==null)return;
 var n=Number(j.count);document.getElementById('vc').textContent=n.toLocaleString('ar-SA-u-nu-latn');document.getElementById('vcw').hidden=false}).catch(function(){});
