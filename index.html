@@ -542,7 +542,7 @@ function b64e(u){var s='';for(var i=0;i<u.length;i+=32768)s+=String.fromCharCode
 function szt(n){return n>=1e6?nf(n/1e6)+' م.ب':Math.max(1,Math.round(n/1e3))+' ك.ب'}
 function jget(u){return fetch(u,{cache:'no-store'}).then(function(r){if(!r.ok)throw r.status;return r.json()})}
 function toJpeg(file){return new Promise(function(ok,bad){var im=new Image(),u=URL.createObjectURL(file);im.onload=function(){var M=1800,w=im.naturalWidth,h=im.naturalHeight,k=Math.min(1,M/Math.max(w,h)),c=document.createElement('canvas');c.width=Math.round(w*k);c.height=Math.round(h*k);var g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,c.width,c.height);g.drawImage(im,0,0,c.width,c.height);URL.revokeObjectURL(u);c.toBlob(function(b){b?ok(b):bad(0)},'image/jpeg',0.82)};im.onerror=function(){URL.revokeObjectURL(u);bad(0)};im.src=u})}
-async function subUpload(pid,file,say){
+async function subUpload(pid,file,say,slot,tot){var pre=tot>1?'ملف '+(slot+1)+' من '+tot+': ':'';
 var mime=file.type,blob=file,name=file.name||'file';
 if(mime==='application/pdf'){if(file.size>3000000)throw 'حجم الملف كبير: الحد 3 ميغا. صغّر الملف أو صوّره كصورة.'}
 else if(/^image\//.test(mime)){try{blob=await toJpeg(file);mime='image/jpeg';name=name.replace(/\.[^.]+$/,'')+'.jpg'}catch(e){throw 'تعذّر قراءة الصورة. جرّب صورة أخرى أو PDF.'}if(blob.size>3000000)throw 'حجم الصورة كبير بعد الضغط. صوّرها بدقة أقل.'}
@@ -550,10 +550,11 @@ else throw 'الملف لازم يكون PDF أو صورة.';
 var raw=new Uint8Array(await blob.arrayBuffer()),iv=crypto.getRandomValues(new Uint8Array(12)),ct=new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv:iv},SESS.key,raw)),all=new Uint8Array(12+ct.length);all.set(iv,0);all.set(ct,12);
 var d=b64e(all),CH=600000,n=Math.ceil(d.length/CH),sid=Date.now().toString(36)+Math.random().toString(36).slice(2,8);
 var post=function(o){return fetch('/api/sub',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(o)}).then(function(r){if(!r.ok){var e=new Error('http');e.st=r.status;throw e}return r.json()})};
-for(var i=0;i<n;i++){say('جارٍ الرفع '+Math.round(i/n*100)+'%...');await post({a:'chunk',rid:SESS.rid,pid:pid,sid:sid,i:i,n:n,d:d.slice(i*CH,(i+1)*CH)})}
-say('جارٍ التثبيت...');await post({a:'commit',rid:SESS.rid,pid:pid,sid:sid,n:n,name:name,mime:mime,size:raw.length})}
+for(var i=0;i<n;i++){say(pre+'جارٍ الرفع '+Math.round(i/n*100)+'%...');await post({a:'chunk',rid:SESS.rid,pid:pid,sid:sid,i:i,n:n,d:d.slice(i*CH,(i+1)*CH)})}
+say(pre+'جارٍ التثبيت...');await post({a:'commit',rid:SESS.rid,pid:pid,sid:sid,f:slot||0,n:n,name:name,mime:mime,size:raw.length})}
 function subErr(e){if(typeof e==='string')return e;var s=e&&e.st;return s===404?'تعذّر التسليم: رمزك غير مفعّل أو النوع محذوف.':s===429?'محاولات كثيرة. انتظر دقيقة ثم أعد المحاولة.':s===507?'مساحة التخزين ممتلئة. تواصل مع المعلم.':s===413?'حجم الملف كبير.':'تعذّر الرفع. تأكد من الاتصال وأعد المحاولة.'}
-async function subView(pid,m){var parts=[];for(var i=0;i<m.n;i++){var j=await jget('/api/sub?rid='+SESS.rid+'&pid='+encodeURIComponent(pid)+'&c='+i);parts.push(j.d)}
+function subFiles(m){return Array.isArray(m.fs)?m.fs:[m]}
+async function subView(pid,m0,fx){var m=subFiles(m0)[fx||0],parts=[];for(var i=0;i<m.n;i++){var j=await jget('/api/sub?rid='+SESS.rid+'&pid='+encodeURIComponent(pid)+'&f='+(fx||0)+'&c='+i);parts.push(j.d)}
 var bin=atob(parts.join('')),u=new Uint8Array(bin.length);for(var k=0;k<bin.length;k++)u[k]=bin.charCodeAt(k);
 var pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:u.slice(0,12)},SESS.key,u.slice(12));var url=URL.createObjectURL(new Blob([pt],{type:m.mime})),a=document.createElement('a');a.href=url;a.target='_blank';a.rel='noopener';a.download=m.name;document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(url)},60000)}
 function subSec(o){
@@ -561,14 +562,14 @@ var w=el('div','noprint');sec(w,'تسليم مشروع');var box=el('div','subbo
 function render(T,M){box.innerHTML='';var P=T.proj||[],S=M.subs||{};
 if(!P.length){box.appendChild(el('p','dmut','لا توجد مشاريع مطلوبة حالياً.'));return}
 var sl=el('select');sl.setAttribute('aria-label','نوع المشروع');P.forEach(function(p){var op=el('option',null,p.n);op.value=p.id;sl.appendChild(op)});
-var fi=el('input');fi.type='file';fi.accept='application/pdf,image/*';fi.setAttribute('aria-label','الملف');
+var fi=el('input');fi.type='file';fi.multiple=true;fi.accept='application/pdf,image/*';fi.setAttribute('aria-label','الملف');
 var bt=el('button','btn2','تسليم');bt.type='button';var ms=el('p','dmut','');
-bt.addEventListener('click',async function(){if(!fi.files.length){ms.textContent='اختر الملف أولاً.';return}bt.disabled=true;
-try{await subUpload(sl.value,fi.files[0],function(t){ms.textContent=t});ms.textContent='تم التسليم بنجاح.';fi.value='';var M2=await jget('/api/sub?rid='+SESS.rid);render(T,M2);var m2=el('p','dmut','تم التسليم بنجاح.');box.insertBefore(m2,box.firstChild)}catch(e){ms.textContent=subErr(e);bt.disabled=false}});
+bt.addEventListener('click',async function(){if(!fi.files.length){ms.textContent='اختر الملف أولاً.';return}if(fi.files.length>3){ms.textContent='الحد الأقصى 3 ملفات. اختر 3 ملفات أو أقل.';return}bt.disabled=true;
+try{var FL=Array.prototype.slice.call(fi.files);for(var q=0;q<FL.length;q++){await subUpload(sl.value,FL[q],function(t){ms.textContent=t},q,FL.length)}ms.textContent='تم التسليم بنجاح.';fi.value='';var M2=await jget('/api/sub?rid='+SESS.rid);render(T,M2);var m2=el('p','dmut','تم التسليم بنجاح.');box.insertBefore(m2,box.firstChild)}catch(e){ms.textContent=subErr(e);bt.disabled=false}});
 [sl,fi,bt,ms].forEach(function(e){box.appendChild(e)});
-box.appendChild(el('p','dmut','PDF أو صورة، حتى 3 ميغا. التسليم الجديد لنفس النوع يستبدل القديم.'));
-P.forEach(function(p){var m=S[p.id],r=el('div','subrow'),t=el('span',null,p.n);if(m){t.appendChild(el('small','dmut',' · سُلّم '+String(m.upd).slice(0,10)+' · '+szt(m.size)))}else t.appendChild(el('small','dmut',' · لم يُسلَّم'));r.appendChild(t);
-if(m){var v=el('button','btn2','عرض');v.type='button';v.addEventListener('click',function(){v.disabled=true;subView(p.id,m).catch(function(){ms.textContent='تعذّر فتح الملف.'}).then(function(){v.disabled=false})});r.appendChild(v)}box.appendChild(r)})}
+box.appendChild(el('p','dmut','حتى 3 ملفات (PDF أو صور)، وكل ملف حتى 3 ميغا. التسليم الجديد لنفس النوع يستبدل القديم كله.'));
+P.forEach(function(p){var m=S[p.id],r=el('div','subrow'),t=el('span',null,p.n);if(m){var FS=subFiles(m);t.appendChild(el('small','dmut',' · سُلّم '+String(m.upd).slice(0,10)+' · '+(FS.length>1?FS.length+' ملفات · ':'')+szt(m.size)))}else t.appendChild(el('small','dmut',' · لم يُسلَّم'));r.appendChild(t);
+if(m){subFiles(m).forEach(function(F0,fx){var v=el('button','btn2',subFiles(m).length>1?'عرض '+(fx+1):'عرض');v.type='button';v.addEventListener('click',function(){v.disabled=true;subView(p.id,m,fx).catch(function(){ms.textContent='تعذّر فتح الملف.'}).then(function(){v.disabled=false})});r.appendChild(v)})}box.appendChild(r)})}
 Promise.all([jget('/api/sub?types=1'),jget('/api/sub?rid='+SESS.rid)]).then(function(r){render(r[0],r[1])}).catch(function(){box.innerHTML='';box.appendChild(el('p','dmut','تعذّر تحميل التسليمات الآن.'))})}
 function exInfo(r){var X=(r.x||[]).filter(function(x){if(!(x&&(x.d||x.tm||x.du||x.rm||x.fr||x.to||x.nt)))return false;if(x.d){var n=new Date(),t0=n.getFullYear()+'-'+('0'+(n.getMonth()+1)).slice(-2)+'-'+('0'+n.getDate()).slice(-2),hm=('0'+n.getHours()).slice(-2)+':'+('0'+n.getMinutes()).slice(-2);if(x.d<t0||(x.d===t0&&x.te&&hm>x.te))return false}return true});if(!X.length)return null;
 var f12=function(x){if(!x)return '';var h=+x.slice(0,2);return (h>12?h-12:h)+':'+x.slice(3)+(h<12?' ص':' م')},wr=el('div'),now=new Date(),td=now.getFullYear()+'-'+('0'+(now.getMonth()+1)).slice(-2)+'-'+('0'+now.getDate()).slice(-2);
@@ -730,7 +731,7 @@ $('pcode').addEventListener('keydown',function(e){if(e.key==='Enter')go()});
 })();
 </script>
 <!-- 84 students -->
-<script type="application/json" id="wsdata">[{"n": "ورقة عمل 1 - خصائص الموائع", "u": "ws/1.pdf"}, {"n": "ورقة عمل 2 - القوى داخل السوائل", "u": "ws/2.pdf"}, {"n": "ورقة عمل 3 - الموائع الساكنة والموائع المتحركة", "u": "ws/3.pdf"}, {"n": "ورقة عمل 4 - المواد الصلبة", "u": "ws/4.pdf"}, {"n": "ورقة عمل 5 - الحركة الدورية", "u": "ws/5.pdf"}, {"n": "ورقة عمل 6 - خصائص الموجات", "u": "ws/6.pdf"}, {"n": "ورقة عمل 7 - سلوك الموجات", "u": "ws/7.pdf"}, {"n": "ورقة عمل 8 - خصائص الصوت الكشف عنه", "u": "ws/8.pdf"}]</script>
+<script type="application/json" id="wsdata">[{"n": "ورقة عمل 1 - خصائص الموائع", "u": "ws/1.pdf"}, {"n": "ورقة عمل 2 - القوى داخل السوائل", "u": "ws/2.pdf"}, {"n": "ورقة عمل 3 - الموائع الساكنة والموائع المتحركة", "u": "ws/3.pdf"}, {"n": "ورقة عمل 4 - المواد الصلبة", "u": "ws/4.pdf"}, {"n": "ورقة عمل 5 - الحركة الدورية", "u": "ws/5.pdf"}, {"n": "ورقة عمل 6 - خصائص الموجات", "u": "ws/6.pdf"}, {"n": "ورقة عمل 7 - سلوك الموجات", "u": "ws/7.pdf"}, {"n": "ورقة عمل 8 - خصائص الصوت الكشف عنه", "u": "ws/8.pdf"}, {"n": "ورقة عمل 9 - الرنين في الأعمدة الهوائية والأوتار", "u": "ws/9.pdf"}, {"n": "ورقة عمل 10 - الاستضاءة", "u": "ws/10.pdf"}]</script>
 <script>
 (function(){
 window.wsBuild=function(ul){var el=document.getElementById('wsdata');

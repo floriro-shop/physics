@@ -19,7 +19,9 @@ function readBody(req) {
 const RIDRE = /^[0-9a-f]{32}$/, SIDRE = /^[a-z0-9]{6,24}$/, PIDRE = /^[A-Za-z0-9_-]{1,40}$/, B64RE = /^[A-Za-z0-9+/=]*$/;
 const MIMES = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 const MAXN = 6, CH = 700000, MAXLEN = 4200000, QUOTA = 150e6, MAXRAW = 3200000;
-const DEF = [1, 2, 3, 4, 5, 6, 7, 8].map((i) => ({ id: 'w' + i, n: 'ورقة عمل ' + i }));
+const MAXF = 3;
+function filesOf(m) { if (!m) return []; if (Array.isArray(m.fs)) return m.fs; return m.sid ? [{ sid: m.sid, n: m.n, len: m.len, name: m.name, mime: m.mime, size: m.size }] : []; }
+const DEF = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((i) => ({ id: 'w' + i, n: 'ورقة عمل ' + i }));
 async function projs() {
   try {
     const c = JSON.parse((await pipe([['GET', 'ofuq:cfg']]))[0].result);
@@ -45,9 +47,11 @@ module.exports = async function (req, res) {
         const h = (await pipe([['HGET', 'ofuq:sub:' + rid, pid]]))[0].result;
         if (!h) return send(res, 404, { error: 'none' });
         let m; try { m = JSON.parse(h); } catch (e) { return send(res, 500, { error: 'bad' }); }
+        const fl = filesOf(m), fi = parseInt(q.get('f') || '0', 10), F = fl[fi];
+        if (!F) return send(res, 400, { error: 'f' });
         const i = parseInt(q.get('c'), 10);
-        if (!(i >= 0 && i < m.n)) return send(res, 400, { error: 'c' });
-        const d = (await pipe([['GET', 'ofuq:sc:' + rid + ':' + pid + ':' + m.sid + ':' + i]]))[0].result;
+        if (!(i >= 0 && i < F.n)) return send(res, 400, { error: 'c' });
+        const d = (await pipe([['GET', 'ofuq:sc:' + rid + ':' + pid + ':' + F.sid + ':' + i]]))[0].result;
         if (!d) return send(res, 404, { error: 'none' });
         return send(res, 200, { d });
       }
@@ -78,6 +82,8 @@ module.exports = async function (req, res) {
       const size = Number(b.size);
       if (MIMES.indexOf(mime) < 0 || !(size > 0 && size <= MAXRAW)) return send(res, 400, { error: 'file' });
       const name = String(b.name || 'file').replace(/[\u0000-\u001f<>"\\/]/g, '').slice(0, 80) || 'file';
+      const fslot = parseInt(b.f || '0', 10);
+      if (!(fslot >= 0 && fslot < MAXF)) return send(res, 400, { error: 'f' });
       const keys = []; for (let i = 0; i < n; i++) keys.push(base + i);
       const lens = (await pipe(keys.map((k) => ['STRLEN', k]))).map((x) => Number(x.result) || 0);
       if (lens.some((l) => l === 0)) return send(res, 400, { error: 'missing' });
@@ -85,12 +91,16 @@ module.exports = async function (req, res) {
       if (total > MAXLEN) { await pipe(keys.map((k) => ['DEL', k])); return send(res, 413, { error: 'big' }); }
       const r = await pipe([['GET', 'ofuq:subbytes'], ['HGET', 'ofuq:sub:' + rid, pid]]);
       let old = null; try { old = JSON.parse(r[1].result); } catch (e) { }
-      const cur = Number(r[0].result || 0), oldLen = old && old.len ? old.len : 0;
-      if (cur + total - oldLen > QUOTA) { await pipe(keys.map((k) => ['DEL', k])); return send(res, 507, { error: 'full' }); }
-      const meta = { sid, n, len: total, name, mime, size, upd: new Date().toISOString() };
+      const oldFs = filesOf(old), cur = Number(r[0].result || 0), oldLen = oldFs.reduce((s, f) => s + (f.len || 0), 0);
+      if (fslot > 0 && oldFs.length !== fslot) { await pipe(keys.map((k) => ['DEL', k])); return send(res, 400, { error: 'order' }); }
+      const nf = { sid, n, len: total, name, mime, size };
+      const newFs = fslot === 0 ? [nf] : oldFs.concat([nf]);
+      const newLen = newFs.reduce((s, f) => s + (f.len || 0), 0);
+      if (cur + newLen - oldLen > QUOTA) { await pipe(keys.map((k) => ['DEL', k])); return send(res, 507, { error: 'full' }); }
+      const meta = { fs: newFs, len: newLen, name: newFs[0].name, mime: newFs[0].mime, size: newFs.reduce((s, f) => s + (f.size || 0), 0), upd: new Date().toISOString() };
       const cmds = keys.map((k) => ['PERSIST', k]);
-      cmds.push(['HSET', 'ofuq:sub:' + rid, pid, JSON.stringify(meta)], ['SADD', 'ofuq:subrids', rid], ['INCRBY', 'ofuq:subbytes', total - oldLen]);
-      if (old && old.sid && old.sid !== sid) for (let i = 0; i < (old.n || 0) && i < 10; i++) cmds.push(['DEL', 'ofuq:sc:' + rid + ':' + pid + ':' + old.sid + ':' + i]);
+      cmds.push(['HSET', 'ofuq:sub:' + rid, pid, JSON.stringify(meta)], ['SADD', 'ofuq:subrids', rid], ['INCRBY', 'ofuq:subbytes', newLen - oldLen]);
+      if (fslot === 0) oldFs.forEach((f) => { if (f.sid && f.sid !== sid) for (let i = 0; i < (f.n || 0) && i < 10; i++) cmds.push(['DEL', 'ofuq:sc:' + rid + ':' + pid + ':' + f.sid + ':' + i]); });
       await pipe(cmds);
       return send(res, 200, { ok: true, meta });
     }

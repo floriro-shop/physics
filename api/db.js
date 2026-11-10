@@ -23,7 +23,7 @@ async function delSub(rid, pid) {
   const h = (await pipe([['HGET', 'ofuq:sub:' + rid, pid]]))[0].result; if (!h) return;
   let m = null; try { m = JSON.parse(h); } catch (e) { }
   const c = [['HDEL', 'ofuq:sub:' + rid, pid]];
-  if (m && m.sid) { for (let i = 0; i < (m.n || 0) && i < 10; i++) c.push(['DEL', 'ofuq:sc:' + rid + ':' + pid + ':' + m.sid + ':' + i]); if (m.len) c.push(['DECRBY', 'ofuq:subbytes', m.len]); }
+  if (m) { const fl = Array.isArray(m.fs) ? m.fs : (m.sid ? [m] : []); fl.forEach((f) => { for (let i = 0; i < (f.n || 0) && i < 10; i++) c.push(['DEL', 'ofuq:sc:' + rid + ':' + pid + ':' + f.sid + ':' + i]); }); if (m.len) c.push(['DECRBY', 'ofuq:subbytes', m.len]); }
   await pipe(c);
 }
 async function delAllSub(rid) {
