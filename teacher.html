@@ -1263,7 +1263,7 @@ say(ids.length?('تم رفع '+n+' طالب ونشر تقاريرهم'+(kept?' (
 head();build();
 var synced=false;
 function sig(g){return (g||[]).filter(function(x){return x.pr}).map(function(x){return [x.pr,x.b,x.s,x.x,x.w,x.u||0,x.uo||0].join('|')}).sort().join(';')}
-function resync(){if(synced||!S.st.length)return;synced=true;setTimeout(async function(){var cf=CF();for(var s of S.st){if(sig(buildGR(s.rec,cf,s.att))!==sig(s.gr)){if(!await saveRec(s,s.rec,cf))break}}},900)}
+var rsTry=0;function resync(){if(synced||!S.st.length)return;if(!S.cfg&&rsTry++<12){setTimeout(resync,500);return}synced=true;setTimeout(async function(){var cf=CF();for(var s of S.st){if(sig(buildGR(s.rec,cf,s.att))!==sig(s.gr)){if(!await saveRec(s,s.rec,cf))break}}},900)}
 cfgc.onSnapshot(function(sn){sn.docs.forEach(function(x){if(x.id==='main')S.cfg=x.data()});if(S.tab==='set')fill()},function(){});
 col.onSnapshot(function(sn){S.st=sn.docs.map(function(x){var o=Object.assign({},x.data());o.id=x.id;return o});fill();resync()},function(){say('تعذّر قراءة البيانات.')});
 setInterval(function(){if(document.visibilityState==='visible')q.then(reload)},45000);
