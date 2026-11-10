@@ -685,7 +685,7 @@ BN5.forEach(function(b){var a=g1[b],c=g2[b],m=+a.m||1,n=el('div','tn');n.appendC
 o.appendChild(bx)})();
 if(PS[1].tot>0||PS[2].tot>0||UR.length){sec(o,'فائض الدرجات');
 o.appendChild(el('p',null,'إذا زادت درجتك في بند عن حدّه يتجمع الفائض. تقدر تطلب الاستفادة منه لتعويض بند ناقص، والمعلم يقبل أو يرفض. فائض أي فترة يُستفاد منه في الفترة الأخرى بشرط أن تكون درجات الفترة التي فيها الفائض مكتملة.'));
-[1,2].forEach(function(pn){if(PS[pn].gs.length)o.appendChild(el('p','dmut',PN[pn]+': الفائض المتاح '+nf(PS[pn].pool)+(PS[pn].pool>0&&!PS[pn].done?' (يُستفاد منه داخل نفس الفترة فقط حتى تكتمل درجاتها)':'')))});
+[1,2].forEach(function(pn){if(PS[pn].gs.length)o.appendChild(el('p','dmut',PN[pn]+': الفائض المتاح '+nf(PS[pn].pool)+(PS[pn].pool>0&&!PS[pn].done?' (يُستفاد منه داخل نفس الفترة فقط حتى تكتمل درجاتها)':'')));PS[pn].gs.forEach(function(g){var xs=+g.x||0;if(xs<=0)return;var ab=Math.min(+g.ab||0,xs),rest=Math.round((xs-ab)*100)/100,t='مصدر الفائض — '+g.b+': +'+nf(xs);if(ab>0)t+=' (+'+nf(ab)+' من زيادة نسبة الحضور'+(rest>0?'، و+'+nf(rest)+' من زيادة الدرجة عن حد البند':'')+')';else t+=' (من زيادة الدرجة عن حد البند)';o.appendChild(el('p','dmut',t))})});
 var TG=[];[1,2].forEach(function(pn){PS[pn].gs.forEach(function(x){var n=Math.round((x.m-(x.w==null?x.s:x.w)-(x.u||0))*100)/100;if(n>0)TG.push({pn:pn,b:x.b,n:n})})});
 function srcs(tp){var a=[];[tp,tp===1?2:1].forEach(function(sp){if(PS[sp].pool>0&&(sp===tp||PS[sp].done))a.push({sp:sp,pool:PS[sp].pool})});return a}
 var ok=TG.filter(function(q){return srcs(q.pn).length});
