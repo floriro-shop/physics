@@ -77,13 +77,13 @@ body{background:var(--bg)}
 #secs{margin:0;gap:0;background:rgba(255,255,255,.09);border-radius:14px;padding:4px;display:grid;grid-template-columns:repeat(3,1fr)}
 #secs .b{background:transparent;color:#cfe0f0;border:0;border-radius:11px;padding:8px 0;text-align:center;font-weight:600;transition:background .15s,color .15s}
 #secs .b[aria-pressed="true"]{background:#fff;color:var(--navy);box-shadow:0 2px 8px rgba(0,0,0,.25)}
-.gsr{position:relative;background:var(--card);padding:6px 10px;border-bottom:1px solid var(--line)}.gsr input{width:100%;box-sizing:border-box;padding:8px 12px;border:1px solid var(--line);border-radius:10px;font:inherit;background:var(--bg,#fff);color:inherit}.gsl{position:absolute;inset-inline:10px;top:100%;max-height:50vh;overflow:auto;background:var(--card);border:1px solid var(--line);border-radius:10px;box-shadow:0 10px 24px -8px rgba(0,0,0,.35);z-index:70}.gsl button{display:flex;justify-content:space-between;gap:8px;width:100%;text-align:start;padding:10px 12px;border:0;border-bottom:1px solid var(--line);background:none;font:inherit;color:inherit;cursor:pointer}.gsl button:hover{background:rgba(127,127,127,.12)}.gsl small{opacity:.7}.gsl p{margin:0;padding:10px 12px;opacity:.7}.r.found{outline:3px solid #f2a33a;background:rgba(242,163,58,.18)}
+.gsr{flex:none;display:flex;align-items:center;margin:7px 0 7px 8px}.gsr input{width:min(160px,30vw);box-sizing:border-box;padding:6px 10px;border:1px solid var(--line);border-radius:10px;font:inherit;background:var(--bg,#fff);color:inherit}.gsl{position:absolute;inset-inline:10px;top:100%;max-height:50vh;overflow:auto;background:var(--card);border:1px solid var(--line);border-radius:10px;box-shadow:0 10px 24px -8px rgba(0,0,0,.35);z-index:70}.gsl button{display:flex;justify-content:space-between;gap:8px;width:100%;text-align:start;padding:10px 12px;border:0;border-bottom:1px solid var(--line);background:none;font:inherit;color:inherit;cursor:pointer}.gsl button:hover{background:rgba(127,127,127,.12)}.gsl small{opacity:.7}.gsl p{margin:0;padding:10px 12px;opacity:.7}.r.found{outline:3px solid #f2a33a;background:rgba(242,163,58,.18)}
 .stk{position:sticky;top:0;z-index:60}
 .stk .top{transition:padding .15s}
-.stk.mini .top{padding:max(6px,env(safe-area-inset-top)) 0 8px}
-.stk.mini .brand{display:none}
+
+
 .strip{position:relative;z-index:50;display:flex;align-items:stretch;background:var(--card);border-bottom:1px solid var(--line);box-shadow:0 6px 16px -12px rgba(15,40,70,.4)}
-#tabs{margin:0;flex:1;flex-wrap:nowrap;overflow-x:auto;gap:2px;padding:0 8px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+#tabs{margin:0;flex:1 1 0;min-width:0;flex-wrap:nowrap;overflow-x:auto;gap:2px;padding:0 8px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
 #tabs::-webkit-scrollbar{display:none}
 #tabs .b{flex:none;background:transparent;color:var(--mute);border:0;border-radius:0;border-bottom:3px solid transparent;padding:12px 14px 9px;white-space:nowrap;font-weight:600}
 #tabs .b[aria-pressed="true"]{background:transparent;color:var(--ink);border-bottom-color:var(--horizon)}
@@ -174,7 +174,7 @@ label{font-weight:600}
 <h1>موقع أفق الفيزياء<small id="tname" hidden>أحمد ال ساري</small></h1></div>
 <div class="bar" id="secs" role="group" aria-label="الشعبة"></div>
 </div></header>
-<nav class="strip" id="strip" aria-label="القسم"><div class="bar" id="tabs" role="group" aria-label="القسم"></div></nav><div class="gsr" id="gsr"><input id="gsq" type="search" placeholder="🔍 بحث باسم الطالب" autocomplete="off" aria-label="بحث باسم الطالب"><div class="gsl" id="gsl" hidden></div></div></div>
+<nav class="strip" id="strip" aria-label="القسم"><div class="bar" id="tabs" role="group" aria-label="القسم"></div><div class="gsr" id="gsr"><input id="gsq" type="search" placeholder="🔍 بحث باسم الطالب" autocomplete="off" aria-label="بحث باسم الطالب"><div class="gsl" id="gsl" hidden></div></div></nav></div>
 <main>
 <div id="clk" class="clk" hidden aria-live="off"></div>
 <div id="alr" hidden></div>
@@ -508,7 +508,6 @@ S.sec=z.sec;S.tab='st';S.sel='';S.pdel='';l.hidden=true;q.value='';q.blur();buil
 setTimeout(function(){var i=document.querySelector('input.phi[data-id="'+z.id+'"]'),row=i&&i.closest('.r');if(row){row.classList.add('found');row.scrollIntoView({block:'center'});setTimeout(function(){row.classList.remove('found')},4000)}},60)});
 document.addEventListener('click',function(e){if(!e.target.closest('#gsr'))l.hidden=true})})();
 
-(function(){var st=document.getElementById('stk'),on=false;if(!st)return;window.addEventListener('scroll',function(){var y=window.pageYOffset||document.documentElement.scrollTop||0;if(!on&&y>90){on=true;st.classList.add('mini')}else if(on&&y<30){on=false;st.classList.remove('mini')}},{passive:true})})();
 function wkd(d){var g=new Date(d+'T00:00:00Z').getUTCDay();return g===5||g===6}
 function wk(d){return wkd(d)||!!HOL()[d]}
 function holName(d){var h=HOL()[d];if(h)return 'إجازة ('+(h.t||'إجازة')+')';return wkd(d)?'إجازة أسبوعية':''}
