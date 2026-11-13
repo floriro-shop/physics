@@ -21,7 +21,7 @@ const MIMES = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp', 'imag
 const MAXN = 6, CH = 700000, MAXLEN = 4200000, QUOTA = 150e6, MAXRAW = 3200000;
 const MAXF = 3;
 function filesOf(m) { if (!m) return []; if (Array.isArray(m.fs)) return m.fs; return m.sid ? [{ sid: m.sid, n: m.n, len: m.len, name: m.name, mime: m.mime, size: m.size }] : []; }
-const DEF = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((i) => ({ id: 'w' + i, n: 'ورقة عمل ' + i }));
+const DEF = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 18].map((i) => ({ id: 'w' + i, n: 'ورقة عمل ' + i }));
 async function projs() {
   try {
     const c = JSON.parse((await pipe([['GET', 'ofuq:cfg']]))[0].result);

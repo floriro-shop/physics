@@ -91,6 +91,8 @@ module.exports = async function (req, res) {
         if (o.v === null) cmds.push(['DEL', 'ofuq:ach']);
         else if (o.v && typeof o.v === 'object') { const j = JSON.stringify(o.v); if (j.length > 60000) return send(res, 413, { error: 'big' }); cmds.push(['SET', 'ofuq:ach', j]); }
         else return send(res, 400, { error: 'bad-op' });
+      } else if (o.o === 'vreset') {
+        cmds.push(['SET', 'visits', '0']);
       } else if (o.o === 'rdel' && RIDRE.test(o.id)) {
         cmds.push(['DEL', 'ofuq:rep:' + o.id]);
       } else return send(res, 400, { error: 'bad-op' });
