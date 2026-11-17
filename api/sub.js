@@ -70,6 +70,7 @@ module.exports = async function (req, res) {
     const pj = list.find((p) => p.id === pid);
     if (!pj) return send(res, 400, { error: 'type' });
     if (pj.dl && new Date(Date.now() + 3 * 3600 * 1000).toISOString().slice(0, 10) > pj.dl) return send(res, 403, { error: 'closed' });
+    { let lm = null; try { lm = JSON.parse((await pipe([['HGET', 'ofuq:sub:' + rid, pid]]))[0].result); } catch (e) { } if (lm && lm.ap) return send(res, 409, { error: 'locked' }); }
     const base = 'ofuq:sc:' + rid + ':' + pid + ':' + sid + ':';
     const n = parseInt(b.n, 10);
     if (!(n >= 1 && n <= MAXN)) return send(res, 400, { error: 'n' });

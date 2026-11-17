@@ -26,6 +26,16 @@ async function delSub(rid, pid) {
   if (m) { const fl = Array.isArray(m.fs) ? m.fs : (m.sid ? [m] : []); fl.forEach((f) => { for (let i = 0; i < (f.n || 0) && i < 10; i++) c.push(['DEL', 'ofuq:sc:' + rid + ':' + pid + ':' + f.sid + ':' + i]); }); if (m.len) c.push(['DECRBY', 'ofuq:subbytes', m.len]); }
   await pipe(c);
 }
+async function okSub(rid, pid) {
+  const h = (await pipe([['HGET', 'ofuq:sub:' + rid, pid]]))[0].result; if (!h) return;
+  let m = null; try { m = JSON.parse(h); } catch (e) { }
+  if (!m || m.ap) return;
+  const c = [];
+  const fl = Array.isArray(m.fs) ? m.fs : (m.sid ? [m] : []); fl.forEach((f) => { for (let i = 0; i < (f.n || 0) && i < 10; i++) c.push(['DEL', 'ofuq:sc:' + rid + ':' + pid + ':' + f.sid + ':' + i]); });
+  if (m.len) c.push(['DECRBY', 'ofuq:subbytes', m.len]);
+  c.push(['HSET', 'ofuq:sub:' + rid, pid, JSON.stringify({ ap: 1, fs: [], len: 0, size: 0, upd: new Date().toISOString() })]);
+  await pipe(c);
+}
 async function delAllSub(rid) {
   const ks = (await pipe([['HKEYS', 'ofuq:sub:' + rid]]))[0].result || [];
   for (const k of ks) await delSub(rid, k);
@@ -82,6 +92,8 @@ module.exports = async function (req, res) {
         cmds.push(['SET', 'ofuq:rep:' + o.id, j]);
       } else if (o.o === 'subdel' && RIDRE.test(o.rid) && IDRE.test(o.pid)) {
         await delSub(o.rid, o.pid);
+      } else if (o.o === 'subok' && RIDRE.test(o.rid) && IDRE.test(o.pid)) {
+        await okSub(o.rid, o.pid);
       } else if (o.o === 'suball' && RIDRE.test(o.rid)) {
         await delAllSub(o.rid);
       } else if (o.o === 'subpurge' && IDRE.test(o.pid)) {
