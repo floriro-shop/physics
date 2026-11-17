@@ -25,7 +25,7 @@ const DEF = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 18].map((i) => (
 async function projs() {
   try {
     const c = JSON.parse((await pipe([['GET', 'ofuq:cfg']]))[0].result);
-    if (c && Array.isArray(c.proj)) return c.proj.filter((p) => p && PIDRE.test(p.id) && typeof p.n === 'string').map((p) => ({ id: p.id, n: p.n.slice(0, 60) }));
+    if (c && Array.isArray(c.proj)) return c.proj.filter((p) => p && PIDRE.test(p.id) && typeof p.n === 'string').map((p) => { const o = { id: p.id, n: p.n.slice(0, 60) }; if (typeof p.dl === 'string' && /^\d{4}-\d\d-\d\d$/.test(p.dl)) o.dl = p.dl; return o; });
   } catch (e) { }
   return DEF;
 }
