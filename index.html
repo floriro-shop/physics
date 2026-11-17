@@ -16,7 +16,7 @@ box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:en
 html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 60px);scroll-behavior:smooth}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
 *{box-sizing:border-box}
-body{margin:0;color:var(--ink);font-family:"LatinDigits","IBM Plex Sans Arabic",Tahoma,Arial,sans-serif;line-height:1.9;background:var(--bg);overflow-x:hidden}
+body{margin:0;color:var(--ink);font-weight:700;font-family:"LatinDigits","IBM Plex Sans Arabic",Tahoma,Arial,sans-serif;line-height:1.9;background:var(--bg);overflow-x:hidden}
 .bg{position:fixed;inset:0;z-index:-1;background:
 radial-gradient(ellipse at 20% 10%,var(--bg2),transparent 60%),
 linear-gradient(var(--grid) 1px,transparent 1px) 0 0/48px 48px,
@@ -189,6 +189,7 @@ section{scroll-margin-top:16px}
 .hofi.k-tot{transform:scale(1.04);box-shadow:0 12px 34px color-mix(in srgb,var(--k) 40%,transparent);border-width:2px}.hofm{font-size:13px;font-weight:700;color:var(--k);letter-spacing:.2px}.hoft{font-weight:800;margin:2px 0 10px}.hofn{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}.hofp{padding:6px 12px;border-radius:999px;font-weight:700;background:color-mix(in srgb,var(--k) 18%,transparent);border:1px solid color-mix(in srgb,var(--k) 55%,transparent)}.hofv{display:inline-block;margin-top:10px;padding:3px 12px;border-radius:999px;font-weight:800;color:#fff;background:var(--k)}
 @keyframes hoff{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}@keyframes hofsh{0%,60%{left:-80px}100%{left:120%}}@keyframes hofs{from{background-position:60px 70px,10px 10px,80px 30px,30px 50px}to{background-position:60px 170px,10px 140px,80px 140px,30px 120px}}
 @media(prefers-reduced-motion:reduce){.hofbe,.hofbd,.hofi::after,.hofb::after{animation:none}}
+input,select,textarea{font-weight:700}
 </style>
 </head>
 <body>

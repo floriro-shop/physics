@@ -18,7 +18,7 @@ box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:en
 @media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0b1724;--ink:#e8eff7;--mute:#9db0c6;--acc:#4fd1de;--ok:#4cc27f;--bad:#ff7b6b;--warn:#f0a94a;--card:#122338;--line:#27425e}}
 :root[data-theme="dark"]{--bg:#0b1724;--ink:#e8eff7;--mute:#9db0c6;--acc:#4fd1de;--ok:#4cc27f;--bad:#ff7b6b;--warn:#f0a94a;--card:#122338;--line:#27425e}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:"LatinDigits","IBM Plex Sans Arabic",Tahoma,Arial,sans-serif;line-height:1.7}
+body{margin:0;background:var(--bg);color:var(--ink);font-weight:700;font-family:"LatinDigits","IBM Plex Sans Arabic",Tahoma,Arial,sans-serif;line-height:1.7}
 main{max-width:900px;margin:0 auto;padding:16px}
 h1{font-size:1.5rem;margin:6px 0 2px}
 h3{margin:0 0 6px}
@@ -166,6 +166,7 @@ label{font-weight:600}
 .r:has(.sn) .grp .b{min-height:46px;padding:6px 4px;justify-content:center}
 .sdet{margin:10px 0;border:1px solid var(--line);border-radius:12px;padding:8px 12px}.sdet>summary{cursor:pointer;padding:4px 0}table.sptb{min-width:0}.sptb input[type=time]{width:100%;min-width:0;padding:6px 4px;font-size:14px}.sptb .b{padding:6px 10px}.sptb td,.sptb th{text-align:center;padding:6px 4px}.sgrid{min-width:0}.sgrid th small{font-weight:400;opacity:.7}.tgc{width:100%;min-width:38px;min-height:40px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:inherit;font-weight:800;cursor:pointer}.tgc.on{background:var(--acc);color:#fff;border-color:var(--acc)}.tgc:disabled{opacity:.45;cursor:not-allowed;font-size:10px;font-weight:600}
 .catcols{display:grid;grid-template-columns:1fr 1fr;gap:10px}.catcol{border:1px solid var(--line);border-radius:12px;padding:8px;min-width:0}.cath{font-weight:800;margin-bottom:6px;padding-bottom:4px;border-bottom:2px solid var(--line)}.cpos .cath{color:#1e8e5a}.cneg .cath{color:#b3261e}.cati{padding:6px 0;border-bottom:1px solid var(--line)}.cati:last-child{border-bottom:0}.catn{margin-bottom:4px;overflow-wrap:anywhere}.catb{display:flex;flex-wrap:wrap;gap:4px}.catb .b{padding:4px 8px;font-size:12px;min-height:30px}.catband{margin-top:12px}
+input,select,textarea{font-weight:700}
 </style>
 </head>
 <body>
