@@ -19,7 +19,7 @@ function readBody(req) {
 const RIDRE = /^[0-9a-f]{32}$/, SIDRE = /^[a-z0-9]{6,24}$/, PIDRE = /^[A-Za-z0-9_-]{1,40}$/, B64RE = /^[A-Za-z0-9+/=]*$/;
 const MIMES = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 const MAXN = 6, CH = 700000, MAXLEN = 4200000, QUOTA = 150e6, MAXRAW = 3200000;
-const MAXF = 3;
+const MAXF = 6;
 function filesOf(m) { if (!m) return []; if (Array.isArray(m.fs)) return m.fs; return m.sid ? [{ sid: m.sid, n: m.n, len: m.len, name: m.name, mime: m.mime, size: m.size }] : []; }
 const DEF = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 18].map((i) => ({ id: 'w' + i, n: 'ورقة عمل ' + i }));
 async function projs() {
@@ -95,6 +95,8 @@ module.exports = async function (req, res) {
       const r = await pipe([['GET', 'ofuq:subbytes'], ['HGET', 'ofuq:sub:' + rid, pid]]);
       let old = null; try { old = JSON.parse(r[1].result); } catch (e) { }
       const oldFs = filesOf(old), cur = Number(r[0].result || 0), oldLen = oldFs.reduce((s, f) => s + (f.len || 0), 0);
+      if (mime === 'application/pdf' && fslot !== 0) { await pipe(keys.map((k) => ['DEL', k])); return send(res, 400, { error: 'pdf' }); }
+      if (fslot > 0 && oldFs.length && oldFs[0].mime === 'application/pdf') { await pipe(keys.map((k) => ['DEL', k])); return send(res, 400, { error: 'pdf' }); }
       if (fslot > 0 && oldFs.length !== fslot) { await pipe(keys.map((k) => ['DEL', k])); return send(res, 400, { error: 'order' }); }
       const nf = { sid, n, len: total, name, mime, size };
       const newFs = fslot === 0 ? [nf] : oldFs.concat([nf]);
