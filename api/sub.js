@@ -67,7 +67,9 @@ module.exports = async function (req, res) {
     const ex = (await pipe([['EXISTS', 'ofuq:rep:' + rid]]))[0].result;
     if (Number(ex) !== 1) return send(res, 404, { error: 'none' });
     const list = await projs();
-    if (!list.some((p) => p.id === pid)) return send(res, 400, { error: 'type' });
+    const pj = list.find((p) => p.id === pid);
+    if (!pj) return send(res, 400, { error: 'type' });
+    if (pj.dl && new Date(Date.now() + 3 * 3600 * 1000).toISOString().slice(0, 10) > pj.dl) return send(res, 403, { error: 'closed' });
     const base = 'ofuq:sc:' + rid + ':' + pid + ':' + sid + ':';
     const n = parseInt(b.n, 10);
     if (!(n >= 1 && n <= MAXN)) return send(res, 400, { error: 'n' });
