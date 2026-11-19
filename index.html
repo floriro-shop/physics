@@ -572,9 +572,10 @@ if(!P.length&&!PX.length){box.appendChild(el('p','dmut','لا توجد مشار�
 if(!P.length)box.appendChild(el('p','dmut','لا توجد مشاريع مفتوحة للتسليم حالياً.'));
 var sl=el('select');sl.setAttribute('aria-label','نوع المشروع');P.forEach(function(p){var op=el('option',null,p.n);op.value=p.id;sl.appendChild(op)});
 var L=[],rt=-1;
-var fi=el('input');fi.type='file';fi.multiple=true;fi.accept='application/pdf,image/*';fi.hidden=true;fi.setAttribute('aria-label','الملف');
+var fi=el('input');fi.type='file';fi.multiple=true;fi.accept='image/jpeg,image/png,image/webp,image/heic,image/heif';fi.hidden=true;fi.setAttribute('aria-label','الملف');
 var ci=el('input');ci.type='file';ci.accept='image/*';ci.setAttribute('capture','environment');ci.hidden=true;ci.setAttribute('aria-label','الكاميرا');
-var bcam=el('button','btn2','📷 صوّر ورقة'),bgal=el('button','btn2','🖼 اختر من الجهاز'),brow=el('div','pgbr');bcam.type='button';bgal.type='button';brow.appendChild(bcam);brow.appendChild(bgal);
+var pi=el('input');pi.type='file';pi.accept='application/pdf';pi.hidden=true;pi.setAttribute('aria-label','ملف PDF');
+var bcam=el('button','btn2','📷 صوّر ورقة'),bgal=el('button','btn2','🖼 من المعرض'),bpdf=el('button','btn2','📄 ملف PDF'),brow=el('div','pgbr');bcam.type='button';bgal.type='button';bpdf.type='button';brow.appendChild(bcam);brow.appendChild(bgal);brow.appendChild(bpdf);
 var tr=el('div','pgt'),ct=el('p','dmut','');
 var bt=el('button','btn2','تسليم');bt.type='button';var ms=el('p','dmut','');
 function isPdf(f){return f.type==='application/pdf'||/\.pdf$/i.test(f.name)}
@@ -595,13 +596,13 @@ if(np){if(arr.length>1||L.length){ms.textContent='ملف PDF واحد فقط، �
 if(L.length&&L[0].pdf){ms.textContent='عندك ملف PDF مضاف. احذفه أولاً إذا تبي تسلّم صور.';return}
 var room=10-L.length;if(arr.length>room){ms.textContent='الحد الأقصى 10 صور.';arr=arr.slice(0,Math.max(0,room))}
 arr.forEach(function(f){L.push({f:f,u:URL.createObjectURL(f),rot:0})});drw()}
-bcam.addEventListener('click',function(){rt=-1;ci.click()});bgal.addEventListener('click',function(){fi.click()});
+bcam.addEventListener('click',function(){rt=-1;ci.click()});bgal.addEventListener('click',function(){fi.click()});bpdf.addEventListener('click',function(){pi.click()});pi.addEventListener('change',function(){addF(pi.files);pi.value=''});
 fi.addEventListener('change',function(){addF(fi.files);fi.value=''});
 ci.addEventListener('change',function(){var f=ci.files&&ci.files[0];if(f){if(rt>=0&&L[rt]&&!L[rt].pdf){URL.revokeObjectURL(L[rt].u);L[rt]={f:f,u:URL.createObjectURL(f),rot:0};drw()}else addF([f])}rt=-1;ci.value=''});
 bt.addEventListener('click',async function(){if(!L.length){ms.textContent='صوّر ورقة أو اختر الملف أولاً.';return}bt.disabled=true;
 try{var FL=[];for(var z=0;z<L.length;z++){var x=L[z];FL.push(x.rot?await rotF(x.f,x.rot):x.f)}
 for(var q=0;q<FL.length;q++){await subUpload(sl.value,FL[q],function(t){ms.textContent=t},q,FL.length)}ms.textContent='تم التسليم بنجاح.';clr();var M2=await jget('/api/sub?rid='+SESS.rid);render(T,M2);var m2=el('p','dmut','تم التسليم بنجاح.');box.insertBefore(m2,box.firstChild)}catch(e){ms.textContent=subErr(e);bt.disabled=false}});
-if(P.length)[sl,brow,ct,tr,fi,ci,bt,ms].forEach(function(e){box.appendChild(e)});
+if(P.length)[sl,brow,ct,tr,fi,pi,ci,bt,ms].forEach(function(e){box.appendChild(e)});
 if(P.length)box.appendChild(el('p','dmut','ملف PDF واحد، أو حتى 10 صور (لا تخلط بينهم)، وكل ملف حتى 3 ميغا. إذا الورقة أو الدرس أكثر من صفحة: صوّر كل صفحة بالترتيب، وتقدر تحذف أو تدوّر أو تعيد تصوير أي صورة قبل التسليم. التسليم الجديد لنفس النوع يستبدل القديم كله.'));
 P.concat(PX).forEach(function(p){var m=S[p.id],r=el('div','subrow'),t=el('span',null,p.n);if(m&&m.ap){t.appendChild(stT(' · تم التسليم ✓ (معتمد)','ok'))}else if(m){var FS=subFiles(m);t.appendChild(stT(' · تم التسليم '+String(m.upd).slice(0,10)+' · '+(FS.length>1?FS.length+' ملفات · ':'')+szt(m.size),'ok'))}else t.appendChild(stT(' · لم يُسلَّم','bad'));r.appendChild(t);
 if(m&&!m.ap){subFiles(m).forEach(function(F0,fx){var v=el('button','btn2',subFiles(m).length>1?'عرض '+(fx+1):'عرض');v.type='button';v.addEventListener('click',function(){v.disabled=true;subView(p.id,m,fx).catch(function(){ms.textContent='تعذّر فتح الملف.'}).then(function(){v.disabled=false})});r.appendChild(v)})}box.appendChild(r)})}
