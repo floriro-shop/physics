@@ -177,6 +177,11 @@ section{scroll-margin-top:16px}
 
 @media print{body>*:not(#pov){display:none!important}body{overflow:visible!important;background:#fff!important}#pov{position:static!important;inset:auto!important;overflow:visible!important;height:auto!important}.povbar,.noprint{display:none!important}}
 .subbox{display:grid;gap:10px;margin:8px 0}
+.pgbr{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}.pgbr .btn2{flex:1 1 140px;margin:0}
+.pgt{display:flex;flex-direction:column;gap:8px;margin:8px 0}.pgi{display:flex;align-items:center;gap:8px;flex-wrap:wrap;border:1px solid var(--line);border-radius:12px;padding:8px;background:var(--card)}
+.pgn{min-width:1.8em;height:1.8em;border-radius:50%;background:var(--acc);color:#fff;display:flex;align-items:center;justify-content:center}
+.pgth{width:64px;height:80px;display:flex;align-items:center;justify-content:center;overflow:hidden;border-radius:8px;background:rgba(0,0,0,.2)}.pgth img{max-width:64px;max-height:80px;transition:transform .2s}
+.pgf{flex:1;word-break:break-all}.pgbs{display:flex;gap:6px;flex-wrap:wrap;flex:1 1 150px}.pgbs .pgb{padding:6px 10px;margin:0;min-width:0;font-size:.85rem}
 .subbox select,.subbox input[type=file]{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink);font:inherit}
 .subrow{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 2px;border-bottom:1px solid var(--line)}
 .subrow{flex-wrap:wrap}.subrow>span{flex:1 1 55%}.subrow:has(.btn2:nth-of-type(2))>span{flex:1 1 100%}.subrow .btn2{margin:0}
@@ -559,18 +564,45 @@ async function subView(pid,m0,fx){var m=subFiles(m0)[fx||0],parts=[];for(var i=0
 var bin=atob(parts.join('')),u=new Uint8Array(bin.length);for(var k=0;k<bin.length;k++)u[k]=bin.charCodeAt(k);
 var pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:u.slice(0,12)},SESS.key,u.slice(12));var url=URL.createObjectURL(new Blob([pt],{type:m.mime})),a=document.createElement('a');a.href=url;a.target='_blank';a.rel='noopener';a.download=m.name;document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(url)},60000)}
 function stT(x,k){var e=el('small',null,x);e.style.cssText='font-weight:800;font-size:.95rem;color:var(--'+k+')';return e}
+function rotF(f,d){return new Promise(function(ok,bad){var im=new Image(),u=URL.createObjectURL(f);im.onload=function(){var M=1800,w=im.naturalWidth,h=im.naturalHeight,k=Math.min(1,M/Math.max(w,h)),sw=Math.round(w*k),sh=Math.round(h*k),c=document.createElement('canvas'),sd=d%180!==0;c.width=sd?sh:sw;c.height=sd?sw:sh;var g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,c.width,c.height);g.translate(c.width/2,c.height/2);g.rotate(d*Math.PI/180);g.drawImage(im,-sw/2,-sh/2,sw,sh);URL.revokeObjectURL(u);c.toBlob(function(b){b?ok(new File([b],(f.name||'photo').replace(/\.[^.]+$/,'')+'.jpg',{type:'image/jpeg'})):bad(0)},'image/jpeg',.82)};im.onerror=function(){URL.revokeObjectURL(u);bad(0)};im.src=u})}
 function subSec(o){
 var w=el('div','noprint');sec(w,'تسليم مشروع');var box=el('div','subbox');w.appendChild(box);o.appendChild(w);box.appendChild(el('p','dmut','جارٍ التحميل...'));
 function render(T,M){box.innerHTML='';var P0=T.proj||[],S=M.subs||{},n0=new Date(),t0=n0.getFullYear()+'-'+('0'+(n0.getMonth()+1)).slice(-2)+'-'+('0'+n0.getDate()).slice(-2),P=P0.filter(function(p){return (!p.dl||p.dl>=t0)&&!(S[p.id]&&S[p.id].ap)}),PX=P0.filter(function(p){return P.indexOf(p)<0&&S[p.id]});
 if(!P.length&&!PX.length){box.appendChild(el('p','dmut','لا توجد مشاريع مطلوبة حالياً.'));return}
 if(!P.length)box.appendChild(el('p','dmut','لا توجد مشاريع مفتوحة للتسليم حالياً.'));
 var sl=el('select');sl.setAttribute('aria-label','نوع المشروع');P.forEach(function(p){var op=el('option',null,p.n);op.value=p.id;sl.appendChild(op)});
-var fi=el('input');fi.type='file';fi.multiple=true;fi.accept='application/pdf,image/*';fi.setAttribute('aria-label','الملف');
+var L=[],rt=-1;
+var fi=el('input');fi.type='file';fi.multiple=true;fi.accept='application/pdf,image/*';fi.hidden=true;fi.setAttribute('aria-label','الملف');
+var ci=el('input');ci.type='file';ci.accept='image/*';ci.setAttribute('capture','environment');ci.hidden=true;ci.setAttribute('aria-label','الكاميرا');
+var bcam=el('button','btn2','📷 صوّر ورقة'),bgal=el('button','btn2','🖼 اختر من الجهاز'),brow=el('div','pgbr');bcam.type='button';bgal.type='button';brow.appendChild(bcam);brow.appendChild(bgal);
+var tr=el('div','pgt'),ct=el('p','dmut','');
 var bt=el('button','btn2','تسليم');bt.type='button';var ms=el('p','dmut','');
-bt.addEventListener('click',async function(){if(!fi.files.length){ms.textContent='اختر الملف أولاً.';return}var nPdf=Array.prototype.filter.call(fi.files,function(f){return f.type==='application/pdf'||/\.pdf$/i.test(f.name)}).length;if(nPdf&&fi.files.length>1){ms.textContent='ملف PDF واحد فقط، أو صور (حتى 10). لا تخلط بينهم.';return}if(fi.files.length>10){ms.textContent='الحد الأقصى 10 صور. اختر 10 أو أقل.';return}bt.disabled=true;
-try{var FL=Array.prototype.slice.call(fi.files);for(var q=0;q<FL.length;q++){await subUpload(sl.value,FL[q],function(t){ms.textContent=t},q,FL.length)}ms.textContent='تم التسليم بنجاح.';fi.value='';var M2=await jget('/api/sub?rid='+SESS.rid);render(T,M2);var m2=el('p','dmut','تم التسليم بنجاح.');box.insertBefore(m2,box.firstChild)}catch(e){ms.textContent=subErr(e);bt.disabled=false}});
-if(P.length)[sl,fi,bt,ms].forEach(function(e){box.appendChild(e)});
-if(P.length)box.appendChild(el('p','dmut','ملف PDF واحد، أو حتى 10 صور (لا تخلط بينهم)، وكل ملف حتى 3 ميغا. التسليم الجديد لنفس النوع يستبدل القديم كله.'));
+function isPdf(f){return f.type==='application/pdf'||/\.pdf$/i.test(f.name)}
+function clr(){L.forEach(function(x){if(x.u)URL.revokeObjectURL(x.u)});L=[]}
+function mkb(txt,lab,fn){var b=el('button','btn2 pgb',txt);b.type='button';b.setAttribute('aria-label',lab);b.addEventListener('click',fn);return b}
+function drw(){tr.innerHTML='';ct.textContent=L.length&&!L[0].pdf?'الصور: '+L.length+' من 10 — رتّبها بنفس ترتيب الأوراق':'';
+L.forEach(function(x,i){var r=el('div','pgi'),n=el('b','pgn',String(i+1));r.appendChild(n);
+if(x.pdf){r.appendChild(el('span','pgf','📄 '+x.f.name))}else{var im=el('img');im.src=x.u;im.alt='الورقة '+(i+1);im.style.transform='rotate('+x.rot+'deg)';var th=el('div','pgth');th.appendChild(im);r.appendChild(th)}
+var bs=el('div','pgbs');
+if(i>0)bs.appendChild(mkb('⬆','تقديم',function(){var t=L[i];L[i]=L[i-1];L[i-1]=t;drw()}));
+if(i<L.length-1)bs.appendChild(mkb('⬇','تأخير',function(){var t=L[i];L[i]=L[i+1];L[i+1]=t;drw()}));
+if(!x.pdf){bs.appendChild(mkb('⟳ تدوير','تدوير',function(){x.rot=(x.rot+90)%360;drw()}));bs.appendChild(mkb('📷 إعادة','إعادة تصوير',function(){rt=i;ci.click()}))}
+bs.appendChild(mkb('🗑 حذف','حذف',function(){if(x.u)URL.revokeObjectURL(x.u);L.splice(i,1);drw()}));r.appendChild(bs);tr.appendChild(r)})}
+function addF(arr){ms.textContent='';arr=Array.prototype.slice.call(arr);if(!arr.length)return;
+if(arr.some(function(f){return !isPdf(f)&&!/^image\//.test(f.type)})){ms.textContent='الملف لازم يكون PDF أو صورة.';return}
+var np=arr.filter(isPdf).length;
+if(np){if(arr.length>1||L.length){ms.textContent='ملف PDF واحد فقط، أو صور (حتى 10). لا تخلط بينهم.';return}clr();L.push({f:arr[0],pdf:1,rot:0});drw();return}
+if(L.length&&L[0].pdf){ms.textContent='عندك ملف PDF مضاف. احذفه أولاً إذا تبي تسلّم صور.';return}
+var room=10-L.length;if(arr.length>room){ms.textContent='الحد الأقصى 10 صور.';arr=arr.slice(0,Math.max(0,room))}
+arr.forEach(function(f){L.push({f:f,u:URL.createObjectURL(f),rot:0})});drw()}
+bcam.addEventListener('click',function(){rt=-1;ci.click()});bgal.addEventListener('click',function(){fi.click()});
+fi.addEventListener('change',function(){addF(fi.files);fi.value=''});
+ci.addEventListener('change',function(){var f=ci.files&&ci.files[0];if(f){if(rt>=0&&L[rt]&&!L[rt].pdf){URL.revokeObjectURL(L[rt].u);L[rt]={f:f,u:URL.createObjectURL(f),rot:0};drw()}else addF([f])}rt=-1;ci.value=''});
+bt.addEventListener('click',async function(){if(!L.length){ms.textContent='صوّر ورقة أو اختر الملف أولاً.';return}bt.disabled=true;
+try{var FL=[];for(var z=0;z<L.length;z++){var x=L[z];FL.push(x.rot?await rotF(x.f,x.rot):x.f)}
+for(var q=0;q<FL.length;q++){await subUpload(sl.value,FL[q],function(t){ms.textContent=t},q,FL.length)}ms.textContent='تم التسليم بنجاح.';clr();var M2=await jget('/api/sub?rid='+SESS.rid);render(T,M2);var m2=el('p','dmut','تم التسليم بنجاح.');box.insertBefore(m2,box.firstChild)}catch(e){ms.textContent=subErr(e);bt.disabled=false}});
+if(P.length)[sl,brow,ct,tr,fi,ci,bt,ms].forEach(function(e){box.appendChild(e)});
+if(P.length)box.appendChild(el('p','dmut','ملف PDF واحد، أو حتى 10 صور (لا تخلط بينهم)، وكل ملف حتى 3 ميغا. إذا الورقة أو الدرس أكثر من صفحة: صوّر كل صفحة بالترتيب، وتقدر تحذف أو تدوّر أو تعيد تصوير أي صورة قبل التسليم. التسليم الجديد لنفس النوع يستبدل القديم كله.'));
 P.concat(PX).forEach(function(p){var m=S[p.id],r=el('div','subrow'),t=el('span',null,p.n);if(m&&m.ap){t.appendChild(stT(' · تم التسليم ✓ (معتمد)','ok'))}else if(m){var FS=subFiles(m);t.appendChild(stT(' · تم التسليم '+String(m.upd).slice(0,10)+' · '+(FS.length>1?FS.length+' ملفات · ':'')+szt(m.size),'ok'))}else t.appendChild(stT(' · لم يُسلَّم','bad'));r.appendChild(t);
 if(m&&!m.ap){subFiles(m).forEach(function(F0,fx){var v=el('button','btn2',subFiles(m).length>1?'عرض '+(fx+1):'عرض');v.type='button';v.addEventListener('click',function(){v.disabled=true;subView(p.id,m,fx).catch(function(){ms.textContent='تعذّر فتح الملف.'}).then(function(){v.disabled=false})});r.appendChild(v)})}box.appendChild(r)})}
 Promise.all([jget('/api/sub?types=1'),jget('/api/sub?rid='+SESS.rid)]).then(function(r){render(r[0],r[1])}).catch(function(){box.innerHTML='';box.appendChild(el('p','dmut','تعذّر تحميل التسليمات الآن.'))})}
